@@ -305,7 +305,39 @@ test14[[1,1]] <- 151879
 test14[[1,2]] <- testao[2,1]
 test14[[1,3]] <- testvi[2,1]
 View(test14)
-  
+
+#########################
+## investigating 1.00 area overlap with 0.00 volume intersection
+# cuz that's just wrong
+
+locs <- read.csv("collardata-locsonly-equalsampling.csv", as.is = TRUE, header = TRUE)
+locs$Date <- as.Date(locs$Date, "%Y-%m-%d")
+#can remove extraneous columns here#
+locs$MigHR <- ifelse(between(locs$Date, as.Date("2014-01-01"), as.Date("2014-03-31")), "Winter 2014", 
+                     ifelse(between(locs$Date, as.Date("2014-06-01"), as.Date("2014-08-31")), "Summer 2014", 
+                            ifelse(between(locs$Date, as.Date("2015-01-01"), as.Date("2015-03-31")), "Winter 2015", 
+                                   ifelse(between(locs$Date, as.Date("2015-06-01"), as.Date("2015-08-31")), "Summer 2015",
+                                          ifelse(between(locs$Date, as.Date("2016-01-01"), as.Date("2016-03-31")), "Winter 2016",
+                                                 ifelse(NA))))))
+
+wtf <- subset(locs, AnimalID == 141500)
+View(wtf)
+hro.look[55,]
+
+library(rgdal)
+library(adehabitatHR)
+latlong <- CRS("+init=epsg:4326")
+stateplane <- CRS("+init=epsg:2818")
+wtf.xy <- data.frame("x"=wtf$Long,"y"=wtf$Lat)
+wtf.spdf.ll <- SpatialPointsDataFrame(wtf.xy, wtf, proj4string = latlong)
+wtf.spdf.sp <- spTransform(wtf.spdf.ll,stateplane)
+kerneloverlap(wtf.spdf.sp[,22], method = "HR", percent = 95)
+
+a <- kerneloverlap(wtf.spdf.sp[,22], method = "HR", percent = 95)
+a[2,1]
+#the above is indexed correctly, but somehow that's not the 
+#number that ends up in the final data. huh.
+
 ############################
 ## MISC HELPFUL STUFF
 ############################

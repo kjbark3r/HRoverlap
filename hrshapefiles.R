@@ -1,13 +1,14 @@
 ######################################################
-## Migration - Area Overlap of Seasonal Home Ranges ##
+##### Migration - Seasonal Home Range Shapefiles #####
 ######  NSERP - Kristin Barker - May/June 2016  ######
+######   Based almost entirely on Kelly's code  ######
 ######################################################
 
 ##SET WD
 ####Work computer, personal laptop, or external hard drive
-wd_workcomp <- "C:\\Users\\kristin.barker\\Documents\\GitHub\\NSERP_AreaOverlap"
-wd_laptop <- "C:\\Users\\kjbark3r\\Documents\\GitHub\\NSERP_AreaOverlap"
-wd_external <- "E:\\Kristins\\NSERP_AreaOverlap\\"
+wd_workcomp <- "C:\\Users\\kristin.barker\\Documents\\GitHub\\HRoverlap"
+wd_laptop <- "C:\\Users\\kjbark3r\\Documents\\GitHub\\HRoverlap"
+wd_external <- "E:\\Kristins\\HRoverlap\\"
 
 if (file.exists(wd_workcomp)) {
   setwd(wd_workcomp)

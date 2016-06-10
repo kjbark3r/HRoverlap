@@ -5,9 +5,9 @@
 
 ##SET WD
 ####Work computer, personal laptop, or external hard drive
-wd_workcomp <- "C:\\Users\\kristin.barker\\Documents\\GitHub\\NSERP_AreaOverlap"
-wd_laptop <- "C:\\Users\\kjbark3r\\Documents\\GitHub\\NSERP_AreaOverlap"
-wd_external <- "E:\\Kristins\\NSERP_AreaOverlap\\"
+wd_workcomp <- "C:\\Users\\kristin.barker\\Documents\\GitHub\\HRoverlap"
+wd_laptop <- "C:\\Users\\kjbark3r\\Documents\\GitHub\\HRoverlap"
+wd_external <- "E:\\Kristins\\HRoverlap\\"
 
 if (file.exists(wd_workcomp)) {
   setwd(wd_workcomp)
@@ -28,7 +28,7 @@ rm(wd_workcomp, wd_laptop, wd_external)
 library(sp) #for kernel centroid estimate
 library(adehabitatHR) #for kernel centroid estimate
 library(raster) #prob don't need this one here
-library(rgdal)
+library(rgdal) #for latlong/stateplane conversions
 library(gsubfn)
 library(maptools) #for writeSpatialShape
 library(dplyr) #for joins
@@ -182,5 +182,6 @@ for(i in 1:numelk.fall15) {
 } 
 hr <- full_join(hr, fall15, by = "AnimalID")
 
-hr <- hr[ ,c("AnimalID", "spr14ao", "spr14vi", "fall14ao", "fall14vi",
-                         "spr15ao", "spr15vi", "fall15ao", "fall15vi"])
+hr <- hr[,c("AnimalID", "spr14ao", "spr14vi", "fall14ao", "fall14vi",
+                         "spr15ao", "spr15vi", "fall15ao", "fall15vi")]
+write.csv(hr, file = "homerangeoverlap.csv", row.names = FALSE)
