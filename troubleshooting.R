@@ -309,10 +309,11 @@ View(test14)
 #########################
 ## investigating 1.00 area overlap with 0.00 volume intersection
 # cuz that's just wrong
-
+library(dplyr)
 locs <- read.csv("collardata-locsonly-equalsampling.csv", as.is = TRUE, header = TRUE)
 locs$Date <- as.Date(locs$Date, "%Y-%m-%d")
-#can remove extraneous columns here#
+locs <- subset(locs, select = -c(X, FixStatus, DOP, TempC, EndTime,
+                                 EndLat, EndLong, Hour))
 locs$MigHR <- ifelse(between(locs$Date, as.Date("2014-01-01"), as.Date("2014-03-31")), "Winter 2014", 
                      ifelse(between(locs$Date, as.Date("2014-06-01"), as.Date("2014-08-31")), "Summer 2014", 
                             ifelse(between(locs$Date, as.Date("2015-01-01"), as.Date("2015-03-31")), "Winter 2015", 
@@ -324,19 +325,42 @@ wtf <- subset(locs, AnimalID == 141500)
 View(wtf)
 hro.look[55,]
 
-library(rgdal)
-library(adehabitatHR)
-latlong <- CRS("+init=epsg:4326")
-stateplane <- CRS("+init=epsg:2818")
+  library(rgdal)
+  library(adehabitatHR)
+  latlong <- CRS("+init=epsg:4326")
+  stateplane <- CRS("+init=epsg:2818")
 wtf.xy <- data.frame("x"=wtf$Long,"y"=wtf$Lat)
 wtf.spdf.ll <- SpatialPointsDataFrame(wtf.xy, wtf, proj4string = latlong)
 wtf.spdf.sp <- spTransform(wtf.spdf.ll,stateplane)
-kerneloverlap(wtf.spdf.sp[,22], method = "HR", percent = 95)
+kerneloverlap(wtf.spdf.sp[,14], method = "HR", percent = 95)
 
-a <- kerneloverlap(wtf.spdf.sp[,22], method = "HR", percent = 95)
+a <- kerneloverlap(wtf.spdf.sp[,14], method = "HR", percent = 95)
 a[2,1]
 #the above is indexed correctly, but somehow that's not the 
 #number that ends up in the final data. huh.
+
+#things to try
+#1. check other indivs to see if those numbers are the correct ones
+mig <- subset(locs, AnimalID == 140300)
+mig <- subset(mig, MigHR == "Winter 2014" | MigHR == "Summer 2014")
+mig.xy <- data.frame("x"=mig$Long,"y"=mig$Lat)
+mig.spdf.ll <- SpatialPointsDataFrame(mig.xy, mig, proj4string = latlong)
+mig.spdf.sp <- spTransform(mig.spdf.ll,stateplane)
+kerneloverlap(mig.spdf.sp[,14], method = "HR", percent = 95)
+amig <- kerneloverlap(mig.spdf.sp[,14], method = "HR", percent = 95)
+amig[2,1]
+
+res <- subset(locs, AnimalID == 140380)
+res <- subset(res, MigHR == "Winter 2014" | MigHR == "Summer 2014")
+res.xy <- data.frame("x"=res$Long,"y"=res$Lat)
+res.spdf.ll <- SpatialPointsDataFrame(res.xy, res, proj4string = latlong)
+res.spdf.sp <- spTransform(res.spdf.ll,stateplane)
+kerneloverlap(res.spdf.sp[,14], method = "HR", percent = 95)
+ares <- kerneloverlap(res.spdf.sp[,14], method = "HR", percent = 95)
+ares[2,1]
+#they are - something's just weird with the 141500 data
+###OK - look at those shps/locs when you get to the office
+rm(list=ls())
 
 ############################
 ## MISC HELPFUL STUFF
