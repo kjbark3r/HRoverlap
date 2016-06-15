@@ -80,12 +80,12 @@ for(i in 1:numelk.spr14) {
   temp_dat_spr14 <- subset(locs, AnimalID == elk) 
   temp_dat_spr14 <- subset(temp_dat_spr14, MigHR == "Winter 2014" | MigHR == "Summer 2014")
   
-  #Get xy points, write out the points to dataframe, to spatial data frame, to stateplane projection
+  #Get xy points, write to dataframe, to spatial data frame, to stateplane projection
   xy <- data.frame("x"=temp_dat_spr14$Long,"y"=temp_dat_spr14$Lat)
   xy.spdf.ll <- SpatialPointsDataFrame(xy, temp_dat_spr14, proj4string = latlong)
   xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
   
-  #calculate area overlap and volume intersection; store results
+  #calculate area overlap and volume intersection
   ao <- kerneloverlap(xy.spdf.sp[,22], method = "HR", percent = 95)
   vol <- kerneloverlap(xy.spdf.sp[,22], method = "VI", percent = 95, conditional = FALSE)
   
@@ -108,12 +108,12 @@ for(i in 1:numelk.fall14) {
   temp_dat_fall14 <- subset(locs, AnimalID == elk) 
   temp_dat_fall14 <- subset(temp_dat_fall14, MigHR == "Summer 2014" | MigHR == "Winter 2015")
   
-  #Get xy points, write out the points to dataframe, to spatial data frame, to stateplane projection
+  #Get xy points, write to dataframe, to spatial data frame, to stateplane projection
   xy <- data.frame("x"=temp_dat_fall14$Long,"y"=temp_dat_fall14$Lat)
   xy.spdf.ll <- SpatialPointsDataFrame(xy, temp_dat_fall14, proj4string = latlong)
   xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
   
-  #calculate area overlap and volume intersection; store results
+  #calculate area overlap and volume intersection
   ao <- kerneloverlap(xy.spdf.sp[,22], method = "HR", percent = 95)
   vol <- kerneloverlap(xy.spdf.sp[,22], method = "VI", percent = 95, conditional = FALSE)
   
@@ -137,12 +137,12 @@ for(i in 1:numelk.spr15) {
   temp_dat_spr15 <- subset(locs, AnimalID == elk) 
   temp_dat_spr15 <- subset(temp_dat_spr15, MigHR == "Winter 2015" | MigHR == "Summer 2015")
   
-  #Get xy points, write out the points to dataframe, to spatial data frame, to stateplane projection
+  #Get xy points, write points to dataframe, to spatial data frame, to stateplane projection
   xy <- data.frame("x"=temp_dat_spr15$Long,"y"=temp_dat_spr15$Lat)
   xy.spdf.ll <- SpatialPointsDataFrame(xy, temp_dat_spr15, proj4string = latlong)
   xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
   
-  #calculate area overlap and volume intersection; store results
+  #calculate area overlap and volume intersection
   ao <- kerneloverlap(xy.spdf.sp[,22], method = "HR", percent = 95)
   vol <- kerneloverlap(xy.spdf.sp[,22], method = "VI", percent = 95, conditional = FALSE)
   
@@ -166,12 +166,12 @@ for(i in 1:numelk.fall15) {
   temp_dat_fall15 <- subset(locs, AnimalID == elk) 
   temp_dat_fall15 <- subset(temp_dat_fall15, MigHR == "Summer 2015" | MigHR == "Winter 2016")
   
-  #Get xy points, write out the points to dataframe, to spatial data frame, to stateplane projection
+  #Get xy points, write to dataframe, to spatial data frame, to stateplane projection
   xy <- data.frame("x"=temp_dat_fall15$Long,"y"=temp_dat_fall15$Lat)
   xy.spdf.ll <- SpatialPointsDataFrame(xy, temp_dat_fall15, proj4string = latlong)
   xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
   
-  #calculate area overlap and volume intersection; store results
+  #calculate area overlap and volume intersection
   ao <- kerneloverlap(xy.spdf.sp[,22], method = "HR", percent = 95)
   vol <- kerneloverlap(xy.spdf.sp[,22], method = "VI", percent = 95, conditional = FALSE)
   
