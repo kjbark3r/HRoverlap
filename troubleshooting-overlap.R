@@ -2,7 +2,24 @@
 ### MISC CODE RELATED TO SEASONAL HR OVERLAP ###
 ########## Most of it doesn't work #############
 ################################################
+wd_workcomp <- "C:\\Users\\kristin.barker\\Documents\\GitHub\\HRoverlap"
+wd_laptop <- "C:\\Users\\kjbark3r\\Documents\\GitHub\\HRoverlap"
+wd_external <- "E:\\Kristins\\HRoverlap\\"
 
+if (file.exists(wd_workcomp)) {
+  setwd(wd_workcomp)
+} else {
+  if(file.exists(wd_laptop)) {
+    setwd(wd_laptop)
+  } else {
+    if(file.exists(wd_external)) {
+      setwd(wd_external)
+    } else {
+      cat("Are you SURE you got that file path right?\n")
+    }
+  }
+}
+rm(wd_workcomp, wd_laptop, wd_external)
 
 #elk loop fails after first indiv
 ##even though it didn't do that in the original code run
@@ -310,18 +327,9 @@ View(test14)
 ## investigating 1.00 area overlap with 0.00 volume intersection
 # cuz that's just wrong
 #########################
-library(dplyr)
-locs <- read.csv("collardata-locsonly-equalsampling.csv", as.is = TRUE, header = TRUE)
-locs$Date <- as.Date(locs$Date, "%Y-%m-%d")
-locs <- subset(locs, select = -c(X, FixStatus, DOP, TempC, EndTime,
-                                 EndLat, EndLong, Hour))
-locs$MigHR <- ifelse(between(locs$Date, as.Date("2014-01-01"), as.Date("2014-03-31")), "Winter 2014", 
-                     ifelse(between(locs$Date, as.Date("2014-06-01"), as.Date("2014-08-31")), "Summer 2014", 
-                            ifelse(between(locs$Date, as.Date("2015-01-01"), as.Date("2015-03-31")), "Winter 2015", 
-                                   ifelse(between(locs$Date, as.Date("2015-06-01"), as.Date("2015-08-31")), "Summer 2015",
-                                          ifelse(between(locs$Date, as.Date("2016-01-01"), as.Date("2016-03-31")), "Winter 2016",
-                                                 ifelse(NA))))))
-write.csv(locs, file = "locsMigHR.csv")
+locs <- read.csv("locsMigHR.csv", as.is = TRUE, header = TRUE)
+
+#meh
 wtf <- subset(locs, AnimalID == 141500)
 View(wtf)
 
@@ -496,12 +504,30 @@ plot(wtf.xy.ll, col = wtf.col)
 
 #6. "manually" calculate area overlap for the weirdos
 
-#based primarily on Kelly's code
-  library(rgeos)
-  library(rgdal)
-  library(adehabitatHR)
-  latlong <- CRS("+init=epsg:4326")
-  stateplane <- CRS("+init=epsg:2818")
+#setup
+wd_workcomp <- "C:\\Users\\kristin.barker\\Documents\\GitHub\\HRoverlap"
+wd_laptop <- "C:\\Users\\kjbark3r\\Documents\\GitHub\\HRoverlap"
+wd_external <- "E:\\Kristins\\HRoverlap"
+  if (file.exists(wd_workcomp)) {
+    setwd(wd_workcomp)
+  } else {
+    if(file.exists(wd_laptop)) {
+      setwd(wd_laptop)
+    } else {
+      if(file.exists(wd_external)) {
+        setwd(wd_external)
+      } else {
+        cat("Are you SURE you got that file path right?\n")
+      }
+    }
+  }
+  rm(wd_workcomp, wd_laptop, wd_external)
+library(rgeos)
+library(rgdal)
+library(adehabitatHR)
+latlong <- CRS("+init=epsg:4326")
+stateplane <- CRS("+init=epsg:2818")
+locs <- read.csv("locsMigHR.csv", as.is = TRUE, header = TRUE)
 ##141500 spr14
   wtf141500 <- subset(locs, AnimalID == 141500)
 #winter 2014
@@ -523,43 +549,163 @@ plot(wtf.xy.ll, col = wtf.col)
   rm(kud.sum141500, ll.sum141500, xy.sum141500) #attempt to save memory
   writeOGR(vol.sum141500, ".", paste("141500_sum14_vol95", sep=""), driver="ESRI Shapefile", overwrite_layer=TRUE)
 #overlap
-  w141500 <- readOGR(dsn = "C:/Users/kristin.barker/Documents/GitHub/HRoverlap", layer = "141500_win14_vol95")
-  	w141500_area <- area(w141500)
-  sum141500 <- readOGR(dsn = "C:/Users/kristin.barker/Documents/GitHub/HRoverlap", layer = "141500_sum14_vol95")
-  	sum141500_area <- area(sum141500)
-  res141500 <- gIntersection(w141500, s141500, byid=FALSE, drop_lower_td=FALSE)
-  ao141500 <- area(res141500)
-  po141500 <- ao141500/win141500_area
+  w141500 <- readOGR(dsn = "E:/Kristins/HRoverlap", layer = "141500_win14_vol95")
+  s141500 <- readOGR(dsn = "E:/Kristins/HRoverlap", layer = "141500_sum14_vol95")
+  res141500 <- gIntersection(w141500, s141500, byid=FALSE)
+  ifelse(is.null(res141500), ovrlp141500 <- 0, ovrlp141500 <- res141500)
+  po141500 <- ovrlp141500/w141500@data$area
   
 ##140800 spr15
-  wtf140500 <- subset(locs, AnimalID == 140500)
+  wtf140800 <- subset(locs, AnimalID == 140800)
 #winter 2014
-  win140500 <- subset(wtf140500, MigHR == "Winter 2015")
-  xy.win140500 <- data.frame("x"=win140500$Long,"y"=win140500$Lat)
-  ll.win140500 <- SpatialPointsDataFrame(xy.win140500, win140500, proj4string = latlong)
-  sp.win140500 <- spTransform(ll.win140500, stateplane)
-  kud.win140500 <- kernelUD(sp.win140500, h="href", grid = 5000)
-  vol.win140500 <- getverticeshr(kud.win140500, percent = 95, ida = NULL, unin = "m", unout = "km")
+  win140800 <- subset(wtf140800, MigHR == "Winter 2015")
+  xy.win140800 <- data.frame("x"=win140800$Long,"y"=win140800$Lat)
+  ll.win140800 <- SpatialPointsDataFrame(xy.win140800, win140800, proj4string = latlong)
+  sp.win140800 <- spTransform(ll.win140800, stateplane)
+  kud.win140800 <- kernelUD(sp.win140800, h="href", grid = 5000)
+  vol.win140800 <- getverticeshr(kud.win140800, percent = 95, ida = NULL, unin = "m", unout = "km")
   rm(kud.win140800, ll.win140800, xy.win140800) #attempt to save memory
-  writeOGR(vol.win140500, ".", paste("140500_win14_vol95", sep=""), driver="ESRI Shapefile", overwrite_layer=TRUE)
+  writeOGR(vol.win140800, ".", paste("140800_win14_vol95", sep=""), driver="ESRI Shapefile", overwrite_layer=TRUE)
 #summer 2014
-  sum140500 <- subset(wtf140500, MigHR == "Summer 2015")
-  xy.sum140500 <- data.frame("x"=sum140500$Long,"y"=sum140500$Lat)
-  ll.sum140500 <- SpatialPointsDataFrame(xy.sum140500, sum140500, proj4string = latlong)
-  sp.sum140500 <- spTransform(ll.sum140500, stateplane)
-  kud.sum140500 <- kernelUD(sp.sum140500, h="href", grid = 5000)
-  vol.sum140500 <- getverticeshr(kud.sum140500, percent = 95, ida = NULL, unin = "m", unout = "km")
+  sum140800 <- subset(wtf140800, MigHR == "Summer 2015")
+  xy.sum140800 <- data.frame("x"=sum140800$Long,"y"=sum140800$Lat)
+  ll.sum140800 <- SpatialPointsDataFrame(xy.sum140800, sum140800, proj4string = latlong)
+  sp.sum140800 <- spTransform(ll.sum140800, stateplane)
+  kud.sum140800 <- kernelUD(sp.sum140800, h="href", grid = 5000)
+  vol.sum140800 <- getverticeshr(kud.sum140800, percent = 95, ida = NULL, unin = "m", unout = "km")
   rm(kud.sum140800, ll.sum140800, xy.sum140800) #attempt to save memory
-  writeOGR(vol.sum140500, ".", paste("140500_sum14_vol95", sep=""), driver="ESRI Shapefile", overwrite_layer=TRUE)
+  writeOGR(vol.sum140800, ".", paste("140800_sum14_vol95", sep=""), driver="ESRI Shapefile", overwrite_layer=TRUE)
 #overlap
-  w140500 <- readOGR(dsn = "C:/Users/kristin.barker/Documents/GitHub/HRoverlap", layer = "140500_win14_vol95")
-  	w140500_area <- area(w140500)
-  sum140500 <- readOGR(dsn = "C:/Users/kristin.barker/Documents/GitHub/HRoverlap", layer = "140500_sum14_vol95")
-  	sum140500_area <- area(sum140500)
-  res140500 <- gIntersection(w140500, s140500, byid=FALSE, drop_lower_td=FALSE)
-  ao140500 <- area(res140500)
-  po140800 <- ao140500/win140500_area
+  w140800 <- readOGR(dsn = "E:/Kristins/HRoverlap", layer = "140800_win14_vol95")
+  s140800 <- readOGR(dsn = "E:/Kristins/HRoverlap", layer = "140800_sum14_vol95")
+  res140800 <- gIntersection(w140800, s140800, byid=FALSE)
+  ifelse(is.null(res140800), ovrlp140800 <- 0, ovrlp140800 <- res140800)
+  po140800 <- ovrlp140800/w140800@data$area
+#display
+po141500; po140800
 
+#double-check with one that actually has overlap
+##140060 spr15
+  wtf140060 <- subset(locs, AnimalID == 140060)
+#winter 2014
+  win140060 <- subset(wtf140060, MigHR == "Winter 2014")
+  xy.win140060 <- data.frame("x"=win140060$Long,"y"=win140060$Lat)
+  ll.win140060 <- SpatialPointsDataFrame(xy.win140060, win140060, proj4string = latlong)
+  sp.win140060 <- spTransform(ll.win140060, stateplane)
+  kud.win140060 <- kernelUD(sp.win140060, h="href", grid = 5000)
+  vol.win140060 <- getverticeshr(kud.win140060, percent = 95, ida = NULL, unin = "m", unout = "km")
+  rm(kud.win140060, ll.win140060, xy.win140060) 
+#summer 2014
+  sum140060 <- subset(wtf140060, MigHR == "Summer 2014")
+  xy.sum140060 <- data.frame("x"=sum140060$Long,"y"=sum140060$Lat)
+  ll.sum140060 <- SpatialPointsDataFrame(xy.sum140060, sum140060, proj4string = latlong)
+  sp.sum140060 <- spTransform(ll.sum140060, stateplane)
+  kud.sum140060 <- kernelUD(sp.sum140060, h="href", grid = 5000)
+  vol.sum140060 <- getverticeshr(kud.sum140060, percent = 95, ida = NULL)
+  rm(kud.sum140060, ll.sum140060, xy.sum140060)
+#overlap
+  res140060 <- gIntersection(vol.win140060, vol.sum140060, byid=FALSE)
+  ai140060 <- sapply(slot(res140060, "polygons"), slot, "area")
+  wi140060 <- sapply(slot(w140060, "polygons"), slot, "area")
+  ifelse(is.null(res140060), po140060 <- 0, po140060 <- ai140060/wi140060)
+#jesus christ that took a lifetime
+#but i totally did it
+#aaaand it doesn't match the kerneloverlap number, fuck
+
+#check out ploygons
+plot(vol.win140060); plot(vol.sum140060, add=TRUE)
+plot(res140060, col = "blue", add = TRUE)
+
+
+####################################
+## code to calculate area overlap
+## since kerneloverlap may be wrong
+#####################################
+
+#1. name dfs, files, etc based on animalid?
+list.test <- data.frame(c(141500, 140800, 140060))
+  colnames(list.test) <- "AnimalID"
+	  num.test <- nrow(list.test)
+	
+for(i in 1:num.test) {
+  elk <- list.test[i,]
+assign(paste0("sub", elk), subset(list.test, AnimalID == elk))
+}    
+#nice. use this to subset real data?
+
+#########HERE GOES##########
+#packages
+	library(rgeos)
+  library(rgdal)
+  library(adehabitatHR)
+#lists
+  list.spr14 <- read.csv("spr14.csv", header = TRUE)
+    numelk.spr14 <- nrow(list.spr14)
+  list.fall14 <- read.csv("fall14.csv", header = TRUE)
+    numelk.fall14 <- nrow(list.fall14)
+  list.spr15 <- read.csv("spr15.csv", header = TRUE)
+    numelk.spr15 <- nrow(list.spr15)
+  list.fall15 <- read.csv("fall15.csv", header = TRUE)
+    numelk.fall15 <- nrow(list.fall15)
+#data	  
+  locs <- read.csv("locsMigHR.csv", as.is = TRUE, header = TRUE, skipNul=TRUE)
+  # note to self: you get "EOF within quoted string" here
+#projections 
+	latlong <- CRS("+init=epsg:4326")
+	stateplane <- CRS("+init=epsg:2818")
+
+######################
+#SPRING 2014 MIGRATION
+spr14 <- data.frame(matrix(ncol = 2, nrow = numelk.spr14)) #create df wo NAs
+colnames(spr14) <- c("AnimalID", "spr14ao")
+
+for(i in 1:numelk.spr14) {
+  elk <- list.spr14[i,]
+
+  #season 1 (here, winter 2014)
+  temp.win14 <- subset(locs, AnimalID == elk & MigHR == "Winter 2014")
+  xy.win14 <- data.frame("x" = temp.win14$Long, "y" = temp.win14$Lat)
+  ll.win14 <- SpatialPointsDataFrame(xy.win14, temp.win14, proj4string = latlong)
+  sp.win14 <- spTransform(ll.win14, stateplane)
+  kud.win14 <- kernelUD(sp.win14, h="href", grid = 5000)
+  vol.win14 <- getverticeshr(kud.win14, percent = 95, ida = NULL, unin = "m", unout = "km")
+  a.win14 <- sapply(slot(vol.win14, "polygons"), slot, "area")
+
+  #season 2
+  temp.sum14 <- subset(locs, AnimalID == elk & MigHR == "Summer 2014")
+  xy.sum14 <- data.frame("x" = temp.sum14$Long, "y" = temp.sum14$Lat)
+  ll.sum14 <- SpatialPointsDataFrame(xy.sum14, temp.sum14, proj4string = latlong)
+  sp.sum14 <- spTransform(ll.sum14, stateplane)
+  kud.sum14 <- kernelUD(sp.sum14, h="href", grid = 5000)
+  vol.sum14 <- getverticeshr(kud.sum14, percent = 95, ida = NULL, unin = "m", unout = "km")
+  
+  #overlap - calc and store
+  i.spr14 <- gIntersection(vol.win14, vol.sum14, byid=FALSE)
+  ifelse(is.null(i.spr14), ai.spr14 <- 0, ai.spr14 <- sapply(slot(i.spr14, "polygons"), slot, "area"))
+  ao.spr14 <- ai.spr14/a.win14  
+  spr14[[i,1]] <- elk
+  spr14[[i,2]] <- ao.spr14
+}    
+
+
+## OOPSIES ##
+
+#this pulls both seasons rather than just one at a time
+for(i in 1:numelk.spr14) {
+  elk <- list.spr14[i,]
+  assign(paste0("sub", elk), subset(locs, AnimalID == elk & MigHR == "Winter 2014" | 
+										  AnimalID == elk & MigHR == "Summer 2014"))
+} 
+
+	latlong <- CRS("+init=epsg:4326")
+	stateplane <- CRS("+init=epsg:2818")
+	
+	
+#this stores all data that i want to keep as temp
+#also can;t use it in later lines
+  # subset related seasons
+  assign(paste0("win14", elk), subset(locs, AnimalID == elk & MigHR == "Winter 2014")
+  assign(paste0("sum14", elk), subset(locs, AnimalID == elk & MigHR == "Summer 2014")
 
 ############################
 ## MISC HELPFUL STUFF
@@ -570,3 +716,13 @@ any(is.na(testxy$x))
 
 #look at one row based on a cell value (here, indiv 140800)
 hro.look[hro.look$AnimalID %in% 140800,]
+
+#index area slot of spatialpolygon (here, df res140060)
+sapply(slot(res140060, "polygons"), slot, "area")
+
+#f%^&ing memory issues
+memory.limit(size = NA) #prints current memory limit, in megs i think
+memory.size(max = TRUE) #max amt of memory obtained from OS
+memory.size(max = FALSE) #amt currently in use
+memory.size(max = NA) #actual limit - same as 1st line above
+memory.limit(size = 7500000) #just shy of 8 tb limit i think
