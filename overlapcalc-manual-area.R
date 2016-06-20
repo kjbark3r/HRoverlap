@@ -32,7 +32,7 @@ rm(wd_workcomp, wd_laptop, wd_external)
 	library(rgdal)
 	library(adehabitatHR)
 #data
-	locs <- read.csv("locsMigHR.csv", as.is = TRUE, header = TRUE)
+	locs <- read.csv("locsMigHR2.csv", as.is = TRUE, header = TRUE)
 #lists
 	list.spr14 <- read.csv("spr14.csv", header = TRUE)
 	  numelk.spr14 <- nrow(list.spr14)

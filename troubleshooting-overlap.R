@@ -708,6 +708,51 @@ for(i in 1:numelk.spr14) {
   assign(paste0("sum14", elk), subset(locs, AnimalID == elk & MigHR == "Summer 2014")
 
 ############################
+## FIRST RUN TROUBLESHOOTING
+############################
+
+############
+##final dataframe extra rows mostly filled with NAs
+# NA rows # 27 - 1485
+# missing overlaps are NAs instead of 0s
+##issue 2: non-numeric object error
+#fails in fall14, spr15, and fall15 for same indiv - 140940
+
+#1. fix error on data read-in (EOF within quoted string)  
+locs <- read.csv("locsMigHR.csv", as.is = TRUE, header = TRUE)
+
+#newp
+
+locs <- read.csv("locsMigHR.csv", as.is = TRUE, header = TRUE, skipNul=TRUE, quote = "")
+locs <- read.csv("locsMigHR.csv", header = TRUE, skipNul=TRUE, quote = "")
+#no error, but does weird stuff to the data & column names
+
+locs <- read.csv("locsMigHR.csv", as.is = TRUE, header = TRUE, skipNul=TRUE, row.names = FALSE)
+#like above but with extra errors 
+
+locs <- read.csv("locsMigHR.csv", as.is = TRUE, header = TRUE, skipNul=TRUE, sep = ",")
+locs <- as.data.frame(read.csv("locsMigHR.csv", as.is = TRUE, header = TRUE, skipNul=TRUE))
+#same as the original code
+
+#GPS DATA FROM COLLARS, PLUS MIGRATION SEASON/YEAR
+locs <- read.csv("collardata-locsonly-equalsampling.csv", as.is = TRUE, header = TRUE)
+locs$Date <- as.Date(locs$Date, "%Y-%m-%d")
+#can remove extraneous columns here#
+library(dplyr)
+locs$MigHR <- ifelse(between(locs$Date, as.Date("2014-01-01"), as.Date("2014-03-31")), "Winter 2014", 
+                ifelse(between(locs$Date, as.Date("2014-06-01"), as.Date("2014-08-31")), "Summer 2014", 
+                  ifelse(between(locs$Date, as.Date("2015-01-01"), as.Date("2015-03-31")), "Winter 2015", 
+                    ifelse(between(locs$Date, as.Date("2015-06-01"), as.Date("2015-08-31")), "Summer 2015",
+                      ifelse(between(locs$Date, as.Date("2016-01-01"), as.Date("2016-03-31")), "Winter 2016",
+                        ifelse(NA))))))
+locs <- select(locs, -c(X, FixStatus, DOP, TempC, CaptureYr, EndTime, EndLat, EndLong, Season, Hour))
+write.csv(locs, file = "locsMigHR2.csv", row.names = FALSE)
+
+# using this file instead of the original one does not give the error
+#and all locations are read in
+# re-running with this file
+  
+############################
 ## MISC HELPFUL STUFF
 ############################
 
