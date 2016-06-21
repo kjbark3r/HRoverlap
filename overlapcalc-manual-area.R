@@ -28,23 +28,24 @@ rm(wd_workcomp, wd_laptop, wd_external)
 ## PACKAGES, DATA, LISTS, PROJECTION INFO
 
 #packages
-	library(rgeos)
-	library(rgdal)
-	library(adehabitatHR)
+library(rgeos)
+library(rgdal)
+library(adehabitatHR)
+library(dplyr)
 #data
-	locs <- read.csv("locsMigHR2.csv", as.is = TRUE, header = TRUE)
+locs <- read.csv("locsMigHR2.csv", as.is = TRUE, header = TRUE)
 #lists
-	list.spr14 <- read.csv("spr14.csv", header = TRUE)
-	  numelk.spr14 <- nrow(list.spr14)
-	list.fall14 <- read.csv("fall14.csv", header = TRUE)
-	  numelk.fall14 <- nrow(list.fall14)
-	list.spr15 <- read.csv("spr15.csv", header = TRUE)
-	  numelk.spr15 <- nrow(list.spr15)
-	list.fall15 <- read.csv("fall15.csv", header = TRUE)
-	  numelk.fall15 <- nrow(list.fall15)
+list.spr14 <- read.csv("spr14.csv", header = TRUE)
+numelk.spr14 <- nrow(list.spr14)
+list.fall14 <- read.csv("fall14.csv", header = TRUE)
+numelk.fall14 <- nrow(list.fall14)
+list.spr15 <- read.csv("spr15.csv", header = TRUE)
+numelk.spr15 <- nrow(list.spr15)
+list.fall15 <- read.csv("fall15.csv", header = TRUE)
+numelk.fall15 <- nrow(list.fall15)
 #projections
-	latlong <- CRS("+init=epsg:4326")
-	stateplane <- CRS("+init=epsg:2818")
+latlong <- CRS("+init=epsg:4326")
+stateplane <- CRS("+init=epsg:2818")
 
 
 ###########################################################################################
@@ -59,7 +60,7 @@ colnames(spr14) <- c("AnimalID", "spr14ao")
 
 for(i in 1:numelk.spr14) {
   elk <- list.spr14[i,]
-
+  
   #winter 2014
   temp.win14 <- subset(locs, AnimalID == elk & MigHR == "Winter 2014")
   xy.win14 <- data.frame("x" = temp.win14$Long, "y" = temp.win14$Lat)
@@ -68,7 +69,7 @@ for(i in 1:numelk.spr14) {
   kud.win14 <- kernelUD(sp.win14, h="href", grid = 5000)
   vol.win14 <- getverticeshr(kud.win14, percent = 95, ida = NULL, unin = "m", unout = "km")
   a.win14 <- sapply(slot(vol.win14, "polygons"), slot, "area")
-
+  
   #summer 2014
   temp.sum14 <- subset(locs, AnimalID == elk & MigHR == "Summer 2014")
   xy.sum14 <- data.frame("x" = temp.sum14$Long, "y" = temp.sum14$Lat)
@@ -92,7 +93,7 @@ colnames(fall14) <- c("AnimalID", "fall14ao")
 
 for(i in 1:numelk.fall14) {
   elk <- list.fall14[i,]
-
+  
   #summer 2014
   temp.sum14 <- subset(locs, AnimalID == elk & MigHR == "Summer 2014")
   xy.sum14 <- data.frame("x" = temp.sum14$Long, "y" = temp.sum14$Lat)
@@ -100,7 +101,7 @@ for(i in 1:numelk.fall14) {
   sp.sum14 <- spTransform(ll.sum14, stateplane)
   kud.sum14 <- kernelUD(sp.sum14, h="href", grid = 5000)
   vol.sum14 <- getverticeshr(kud.sum14, percent = 95, ida = NULL, unin = "m", unout = "km")
-
+  
   #winter 2015
   temp.win15 <- subset(locs, AnimalID == elk & MigHR == "Winter 2015")
   xy.win15 <- data.frame("x" = temp.win15$Long, "y" = temp.win15$Lat)
@@ -127,7 +128,7 @@ colnames(spr15) <- c("AnimalID", "spr15ao")
 
 for(i in 1:numelk.spr15) {
   elk <- list.spr15[i,]
-
+  
   #winter 2015
   temp.win15 <- subset(locs, AnimalID == elk & MigHR == "Winter 2015")
   xy.win15 <- data.frame("x" = temp.win15$Long, "y" = temp.win15$Lat)
@@ -136,7 +137,7 @@ for(i in 1:numelk.spr15) {
   kud.win15 <- kernelUD(sp.win15, h="href", grid = 5000)
   vol.win15 <- getverticeshr(kud.win15, percent = 95, ida = NULL, unin = "m", unout = "km")
   a.win15 <- sapply(slot(vol.win15, "polygons"), slot, "area")
-
+  
   #summer 2015
   temp.sum15 <- subset(locs, AnimalID == elk & MigHR == "Summer 2015")
   xy.sum15 <- data.frame("x" = temp.sum15$Long, "y" = temp.sum15$Lat)
@@ -162,7 +163,7 @@ colnames(fall15) <- c("AnimalID", "fall15ao")
 
 for(i in 1:numelk.fall15) {
   elk <- list.fall15[i,]
-
+  
   #summer 2015
   temp.sum15 <- subset(locs, AnimalID == elk & MigHR == "Summer 2015")
   xy.sum15 <- data.frame("x" = temp.sum15$Long, "y" = temp.sum15$Lat)
@@ -170,7 +171,7 @@ for(i in 1:numelk.fall15) {
   sp.sum15 <- spTransform(ll.sum15, stateplane)
   kud.sum15 <- kernelUD(sp.sum15, h="href", grid = 5000)
   vol.sum15 <- getverticeshr(kud.sum15, percent = 95, ida = NULL, unin = "m", unout = "km")
-
+  
   #winter 2015
   temp.win15 <- subset(locs, AnimalID == elk & MigHR == "Winter 2015")
   xy.win15 <- data.frame("x" = temp.win15$Long, "y" = temp.win15$Lat)
@@ -189,3 +190,4 @@ for(i in 1:numelk.fall15) {
 } 
 
 hr.manual <- full_join(hr.manual, fall15, by = "AnimalID")
+hr.manual <- hr.manual[,c("AnimalID", "spr14ao", "fall14ao", "spr15ao", "fall15ao")]
