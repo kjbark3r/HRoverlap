@@ -1,0 +1,199 @@
+
+R version 3.3.0 (2016-05-03) -- "Supposedly Educational"
+Copyright (C) 2016 The R Foundation for Statistical Computing
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ##########################################################
+> ## Migration - Area Overlap Calculation - no adehabitat ##
+> ########  NSERP - Kristin Barker - June 2016  ############
+> ##########################################################
+> 
+> ## SET WD
+> 
+> #work computer, personal laptop, or external hard drive
+> wd_workcomp <- "C:\\Users\\kristin.barker\\Documents\\GitHub\\HRoverlap"
+> wd_laptop <- "C:\\Users\\kjbark3r\\Documents\\GitHub\\HRoverlap"
+> wd_external <- "E:\\Kristins\\HRoverlap\\"
+> 
+> if (file.exists(wd_workcomp)) {
++   setwd(wd_workcomp)
++ } else {
++   if(file.exists(wd_laptop)) {
++     setwd(wd_laptop)
++   } else {
++     if(file.exists(wd_external)) {
++       setwd(wd_external)
++     } else {
++       cat("Are you SURE you got that file path right?\n")
++     }
++   }
++ }
+> rm(wd_workcomp, wd_laptop, wd_external)
+> 
+> ## PACKAGES, DATA, LISTS, PROJECTION INFO
+> 
+> #packages
+> library(rgeos)
+rgeos version: 0.3-19, (SVN revision 524)
+ GEOS runtime version: 3.5.0-CAPI-1.9.0 r4084 
+ Linking to sp version: 1.2-3 
+ Polygon checking: TRUE 
+
+> library(rgdal)
+Loading required package: sp
+rgdal: version: 1.1-10, (SVN revision 622)
+ Geospatial Data Abstraction Library extensions to R successfully loaded
+ Loaded GDAL runtime: GDAL 2.0.1, released 2015/09/15
+ Path to GDAL shared files: C:/Users/kristin.barker/Documents/R/win-library/3.3/rgdal/gdal
+ Loaded PROJ.4 runtime: Rel. 4.9.2, 08 September 2015, [PJ_VERSION: 492]
+ Path to PROJ.4 shared files: C:/Users/kristin.barker/Documents/R/win-library/3.3/rgdal/proj
+ Linking to sp version: 1.2-3 
+> library(adehabitatHR)
+Loading required package: deldir
+deldir 0.1-12
+Loading required package: ade4
+Loading required package: adehabitatMA
+Loading required package: adehabitatLT
+Loading required package: CircStats
+Loading required package: MASS
+Loading required package: boot
+> getwd()
+[1] "C:/Users/kristin.barker/Documents/GitHub/HRoverlap"
+> locs <- read.csv("locsMigHR2.csv", as.is = TRUE, header = TRUE)
+> #lists
+> list.spr14 <- read.csv("spr14.csv", header = TRUE)
+> numelk.spr14 <- nrow(list.spr14)
+> list.fall14 <- read.csv("fall14.csv", header = TRUE)
+> numelk.fall14 <- nrow(list.fall14)
+> list.spr15 <- read.csv("spr15.csv", header = TRUE)
+> numelk.spr15 <- nrow(list.spr15)
+> list.fall15 <- read.csv("fall15.csv", header = TRUE)
+> numelk.fall15 <- nrow(list.fall15)
+> #projections
+> latlong <- CRS("+init=epsg:4326")
+> stateplane <- CRS("+init=epsg:2818")
+> spr14 <- read.csv(file = "spr14overlap-manual.csv", as.is = TRUE, header = TRUE)
+> ######################
+> #FALL 2014 MIGRATION
+> fall14 <- data.frame(matrix(ncol = 2, nrow = numelk.fall14)) #create df wo NAs
+> colnames(fall14) <- c("AnimalID", "fall14ao")
+> 
+> for(i in 1:numelk.fall14) {
++   elk <- list.fall14[i,]
++   
++   #summer 2014
++   temp.sum14 <- subset(locs, AnimalID == elk & MigHR == "Summer 2014")
++   xy.sum14 <- data.frame("x" = temp.sum14$Long, "y" = temp.sum14$Lat)
++   ll.sum14 <- SpatialPointsDataFrame(xy.sum14, temp.sum14, proj4string = latlong)
++   sp.sum14 <- spTransform(ll.sum14, stateplane)
++   kud.sum14 <- kernelUD(sp.sum14, h="href", grid = 5000)
++   vol.sum14 <- getverticeshr(kud.sum14, percent = 95, ida = NULL, unin = "m", unout = "km")
++   
++   #winter 2015
++   temp.win15 <- subset(locs, AnimalID == elk & MigHR == "Winter 2015")
++   xy.win15 <- data.frame("x" = temp.win15$Long, "y" = temp.win15$Lat)
++   ll.win15 <- SpatialPointsDataFrame(xy.win15, temp.win15, proj4string = latlong)
++   sp.win15 <- spTransform(ll.win15, stateplane)
++   kud.win15 <- kernelUD(sp.win15, h="href", grid = 5000)
++   vol.win15 <- getverticeshr(kud.win15, percent = 95, ida = NULL, unin = "m", unout = "km")
++   a.win15 <- sapply(slot(vol.win15, "polygons"), slot, "area")
++   
++   #overlap - calc and store
++   i.fall14 <- gIntersection(vol.win15, vol.sum14, byid=FALSE)
++   ifelse(is.null(i.fall14), ai.fall14 <- 0, ai.fall14 <- sapply(slot(i.fall14, "polygons"), slot, "area"))
++   ao.fall14 <- ai.fall14/a.win15  
++   fall14[[i,1]] <- elk
++   fall14[[i,2]] <- ao.fall14
++ } 
+There were 50 or more warnings (use warnings() to see the first 50)
+> 
+> hr.manual <- full_join(fall14, spr14, by = "AnimalID")
+Error: could not find function "full_join"
+> 
+> ######################
+> #SPRING 2015 MIGRATION
+> spr15 <- data.frame(matrix(ncol = 2, nrow = numelk.spr15)) #create df wo NAs
+> colnames(spr15) <- c("AnimalID", "spr15ao")
+> 
+> for(i in 1:numelk.spr15) {
++   elk <- list.spr15[i,]
++   
++   #winter 2015
++   temp.win15 <- subset(locs, AnimalID == elk & MigHR == "Winter 2015")
++   xy.win15 <- data.frame("x" = temp.win15$Long, "y" = temp.win15$Lat)
++   ll.win15 <- SpatialPointsDataFrame(xy.win15, temp.win15, proj4string = latlong)
++   sp.win15 <- spTransform(ll.win15, stateplane)
++   kud.win15 <- kernelUD(sp.win15, h="href", grid = 5000)
++   vol.win15 <- getverticeshr(kud.win15, percent = 95, ida = NULL, unin = "m", unout = "km")
++   a.win15 <- sapply(slot(vol.win15, "polygons"), slot, "area")
++   
++   #summer 2015
++   temp.sum15 <- subset(locs, AnimalID == elk & MigHR == "Summer 2015")
++   xy.sum15 <- data.frame("x" = temp.sum15$Long, "y" = temp.sum15$Lat)
++   ll.sum15 <- SpatialPointsDataFrame(xy.sum15, temp.sum15, proj4string = latlong)
++   sp.sum15 <- spTransform(ll.sum15, stateplane)
++   kud.sum15 <- kernelUD(sp.sum15, h="href", grid = 5000)
++   vol.sum15 <- getverticeshr(kud.sum15, percent = 95, ida = NULL, unin = "m", unout = "km")
++   
++   #overlap - calc and store
++   i.spr15 <- gIntersection(vol.win15, vol.sum15, byid=FALSE)
++   ifelse(is.null(i.spr15), ai.spr15 <- 0, ai.spr15 <- sapply(slot(i.spr15, "polygons"), slot, "area"))
++   ao.spr15 <- ai.spr15/a.win15  
++   spr15[[i,1]] <- elk
++   spr15[[i,2]] <- ao.spr15
++ } 
+There were 50 or more warnings (use warnings() to see the first 50)
+> 
+> hr.manual <- full_join(hr.manual, spr15, by = "AnimalID")
+Error: could not find function "full_join"
+> library(dplyr)
+
+Attaching package: ‘dplyr’
+
+The following object is masked from ‘package:adehabitatLT’:
+
+    id
+
+The following object is masked from ‘package:MASS’:
+
+    select
+
+The following objects are masked from ‘package:rgeos’:
+
+    intersect, setdiff, union
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+> hr.manual <- full_join(fall14, spr14, by = "AnimalID")
+> hr.manual <- full_join(hr.manual, spr15, by = "AnimalID")
+> View(hr.manual)
+> View(fall14)
+> View(spr14)
+> rm(hr.manual)
+> spr14 <- select(spr14, -X)
+> View(spr14)
+> hr.manual <- full_join(fall14, spr14, by = "AnimalID")
+> hr.manual <- full_join(hr.manual, spr15, by = "AnimalID")
+> ?arrange
+> View(hr.manual)
+> hr.manual <- hr.manual[,c("AnimalID", "spr14ao", "fall14ao", "spr15ao")]
+> View(hr.manual)
+> write.csv(hr.manual, file = "overlap-manual-take2.csv", row.names = FALSE)
