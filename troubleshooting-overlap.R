@@ -773,7 +773,23 @@ if( sfParallel() ) {
   #but not how many cores you're using
   #(that's what the above code is for)
 # aaand apparently that's all there is to it
-  
+ 
+##############
+#loading in seasonal data
+#to create final df
+#after running falll15 season separately
+############# 
+spr14 <- read.csv("spr14ao.csv")
+fall14 <- read.csv("fall14ao.csv")
+spr15 <- read.csv("spr15ao.csv")
+
+hr.manual <- full_join(fall14, spr14, by = "AnimalID")
+	hr.manual <- full_join(hr.manual, spr15, by = "AnimalID")
+	hr.manual <- full_join(hr.manual, fall15, by = "AnimalID")
+	hr.manual <- hr.manual[,c("AnimalID", "spr14ao", "fall14ao", "spr15ao", "fall15ao")]
+#you could probably pipe this... if you have time to play
+
+
 ############################
 ## MISC HELPFUL STUFF
 ############################

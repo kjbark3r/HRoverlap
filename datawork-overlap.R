@@ -25,9 +25,42 @@ if (file.exists(wd_workcomp)) {
 rm(wd_workcomp, wd_laptop, wd_external)
 
 ##DATA AND LIBRARIES
-hro <- read.csv("homerangeoverlap.csv")
-#or just use hr if you have your data stuff loaded
 library(dplyr)
+
+hro <- read.csv("homerangeoverlap.csv") #automated
+hrm <- read.csv("overlap-manual.csv") #manual
+
+#replacee automated area overlap with manual calculation
+
+####DELETE BELOW LINES AND REPLACE HRO <- LINE WITH COMMENTED OUT ONE EBELOW IT
+  ## This is to use kerneloverlap results for fall15ao
+  ## because I messed up the manual analysis for fall15
+  ## but I want to get a preliminary look at the data today
+hrm <- select(hrm, -fall15ao)
+hro <- select(hro, -c(spr14ao, fall14ao, spr15ao))
+# hro <- select(hro, -contains("ao"))
+
+
+#replace with manual area overlap calculations
+hro <- full_join(hro, hrm, by = "AnimalID") 
+rm(hrm)
+
+#if want to reorder
+#  hr <- hr[,c("AnimalID", "spr14ao", "spr14ao.man"...)]
+
+# separate df containing results of first glance
+look <- read.csv("migstatus-prelimlook.csv")
+look <- look[, c("AnimalID", "Status")]
+hro.look <- full_join(hro, look, by = "AnimalID")
+
+################
+# manual vs automated area overlap
+par(mfrow=c(2, 2))
+plot(hr$spr14ao~hr$spr14ao.man, main = "Spring 2014")
+plot(hr$spr15ao~hr$spr15ao.man, main = "Spring 2015")
+plot(hr$fall14ao~hr$fall14ao.man, main = "Fall 2014")
+plot(hr$fall15ao~hr$fall15ao.man, main = "Fall 2015")
+# awesome
 
 ################
 # histograms
@@ -61,12 +94,7 @@ boxplot(hro$spr14vi, hro$spr15vi, hro$fall14vi, hro$fall15vi,
         names = c("Spr14", "Spr15", "Fall14", "Fall15"))
 
 ################
-# with prelim glance results
-
-#create df
-look <- read.csv("migstatus-prelimlook.csv")
-lookstatus <- look[, c("AnimalID", "Status")]
-hro.look <- full_join(hr, lookstatus, by = "AnimalID")
+# calculations with prelim glance results
 
 #boxplots
 boxplot(spr14ao ~ Status, data = hro.look, main = "Spr14 AO")
@@ -83,53 +111,49 @@ plot(hro$spr14ao~hro$spr14vi, main = "Spring 2014")
 plot(hro$spr15ao~hro$spr15vi, main = "Spring 2015")
 plot(hro$fall14ao~hro$fall14vi, main = "Fall 2014")
 plot(hro$fall15ao~hro$fall15vi, main = "Fall 2015")
+# decent agreeement but not the tightest
+#   agreement looks stronger in 2015 than in 2014
 
-par(mfrow=c(2, 2))
-plot(hr$spr14ao~hr$spr14vi, main = "Spring 2014")
-plot(hr$spr15ao~hr$spr15vi, main = "Spring 2015")
-plot(hr$fall14ao~hr$fall14vi, main = "Fall 2014")
-plot(hr$fall15ao~hr$fall15vi, main = "Fall 2015")
-
-#completely meaningless plots - volume intersection
+#rank plots - volume intersection
 s14vi <- hro.look %>%
   arrange(spr14vi) %>%
   subset(select = c(AnimalID, spr14vi, Status)) %>%
   mutate(Rank = row_number()) %>%
   na.omit()
-plot(s14vi$spr14vi ~ s14a$Rank, main = "Spring 2014",
-     col = s14vi$Status)
+plot(s14vi$spr14vi ~ s14vi$Rank, main = "Spring 2014 VI",
+     col = s14vi$Status, ylim = c(0,1))
 
 f14vi <- hro.look %>%
   arrange(fall14vi) %>%
   subset(select = c(AnimalID, fall14vi, Status)) %>%
   mutate(Rank = row_number()) %>%
   na.omit()
-plot(f14vi$fall14vi ~ f14vi$Rank, main = "Fall 2014",
-     col = f14vi$Status)
+plot(f14vi$fall14vi ~ f14vi$Rank, main = "Fall 2014 VI",
+     col = f14vi$Status, ylim = c(0,1))
 
 s15vi <- hro.look %>%
   arrange(spr15vi) %>%
   subset(select = c(AnimalID, spr15vi, Status)) %>%
   mutate(Rank = row_number()) %>%
   na.omit()
-plot(s15vi$spr15vi ~ s15vi$Rank, main = "Spring 2015",
-     col = s15vi$Status)
+plot(s15vi$spr15vi ~ s15vi$Rank, main = "Spring 2015 VI",
+     col = s15vi$Status, ylim = c(0,1))
 
 f15vi <- hro.look %>%
   arrange(fall15vi) %>%
   subset(select = c(AnimalID, fall15vi, Status)) %>%
   mutate(Rank = row_number()) %>%
   na.omit()
-plot(f15vi$fall15vi ~ f15vi$Rank, main = "Fall 2015",
-     col = f15vi$Status)
+plot(f15vi$fall15vi ~ f15vi$Rank, main = "Fall 2015 VI",
+     col = f15vi$Status, ylim = c(0,1))
 
-#completely meaningless plots - area overlap
+#rank plots - area overlap
 s14a <- hro.look %>%
   arrange(spr14ao) %>%
   subset(select = c(AnimalID, spr14ao, Status)) %>%
   mutate(Rank = row_number()) %>%
   na.omit()
-plot(s14a$spr14ao ~ s14a$Rank, main = "Spring 2014",
+plot(s14a$spr14ao ~ s14a$Rank, main = "Spring 2014 AO",
      col = s14a$Status)
 
 f14a <- hro.look %>%
@@ -137,7 +161,7 @@ f14a <- hro.look %>%
   subset(select = c(AnimalID, fall14ao, Status)) %>%
   mutate(Rank = row_number()) %>%
   na.omit()
-plot(f14a$fall14ao ~ f14a$Rank, main = "Fall 2014",
+plot(f14a$fall14ao ~ f14a$Rank, main = "Fall 2014 AO",
      col = f14a$Status)
 
 s15a <- hro.look %>%
@@ -145,7 +169,7 @@ s15a <- hro.look %>%
   subset(select = c(AnimalID, spr15ao, Status)) %>%
   mutate(Rank = row_number()) %>%
   na.omit()
-plot(s15a$spr15ao ~ s15a$Rank, main = "Spring 2015",
+plot(s15a$spr15ao ~ s15a$Rank, main = "Spring 2015 AO",
      col = s15a$Status)
 
 f15a <- hro.look %>%
@@ -153,6 +177,14 @@ f15a <- hro.look %>%
   subset(select = c(AnimalID, fall15ao, Status)) %>%
   mutate(Rank = row_number()) %>%
   na.omit()
-plot(f15a$fall15ao ~ f15a$Rank, main = "Fall 2015",
+plot(f15a$fall15ao ~ f15a$Rank, main = "Fall 2015 AO",
      col = f15a$Status)
 
+################
+# deleted code
+
+hrm <- hrm %>%
+  rename(spr14ao.man = spr14ao) %>%
+  rename(fall14ao.man = fall14ao) %>%
+  rename(spr15ao.man = spr15ao) %>%
+  rename(fall15ao.man = fall15ao)

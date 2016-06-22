@@ -175,19 +175,19 @@ for(i in 1:numelk.fall15) {
   kud.sum15 <- kernelUD(sp.sum15, h="href", grid = 5000)
   vol.sum15 <- getverticeshr(kud.sum15, percent = 95, ida = NULL, unin = "m", unout = "km")
   
-  #winter 2015
-  temp.win15 <- subset(locs, AnimalID == elk & MigHR == "Winter 2015")
-  xy.win15 <- data.frame("x" = temp.win15$Long, "y" = temp.win15$Lat)
-  ll.win15 <- SpatialPointsDataFrame(xy.win15, temp.win15, proj4string = latlong)
-  sp.win15 <- spTransform(ll.win15, stateplane)
-  kud.win15 <- kernelUD(sp.win15, h="href", grid = 5000)
-  vol.win15 <- getverticeshr(kud.win15, percent = 95, ida = NULL, unin = "m", unout = "km")
-  a.win15 <- sapply(slot(vol.win15, "polygons"), slot, "area")
+  #winter 2016
+  temp.win16 <- subset(locs, AnimalID == elk & MigHR == "Winter 2016")
+  xy.win16 <- data.frame("x" = temp.win16$Long, "y" = temp.win16$Lat)
+  ll.win16 <- SpatialPointsDataFrame(xy.win16, temp.win16, proj4string = latlong)
+  sp.win16 <- spTransform(ll.win16, stateplane)
+  kud.win16 <- kernelUD(sp.win16, h="href", grid = 5000)
+  vol.win16 <- getverticeshr(kud.win16, percent = 95, ida = NULL, unin = "m", unout = "km")
+  a.win16 <- sapply(slot(vol.win16, "polygons"), slot, "area")
   
   #overlap - calc and store
-  i.fall15 <- gIntersection(vol.win15, vol.sum15, byid=FALSE)
+  i.fall15 <- gIntersection(vol.win16, vol.sum15, byid=FALSE)
   ifelse(is.null(i.fall15), ai.fall15 <- 0, ai.fall15 <- sapply(slot(i.fall15, "polygons"), slot, "area"))
-  ao.fall15 <- ai.fall15/a.win15  
+  ao.fall15 <- ai.fall15/a.win16
   fall15[[i,1]] <- elk
   fall15[[i,2]] <- ao.fall15
 } 
