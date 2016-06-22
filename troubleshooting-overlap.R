@@ -751,6 +751,28 @@ write.csv(locs, file = "locsMigHR2.csv", row.names = FALSE)
 # using this file instead of the original one does not give the error
 #and all locations are read in
 # re-running with this file
+
+##############
+#learning to run on multiple processors
+#############
+library(snowfall)
+#below code copied/slightly modified from help file
+
+# tell R to run on more than one cpu
+sfInit(parallel=TRUE, cpus=3)
+# ask whether you're running on multiple and how many 
+if( sfParallel() ) {
+  cat( "Running in parallel mode on", sfCpus(), "nodes.\n" )
+} else {
+  cat( "Running in sequential mode.\n" )
+}
+
+#sfInit initializes the multiple running thing
+#sfStop stops it (obvs)
+#sfParallel() tells you whether or not you're parallel
+  #but not how many cores you're using
+  #(that's what the above code is for)
+# aaand apparently that's all there is to it
   
 ############################
 ## MISC HELPFUL STUFF

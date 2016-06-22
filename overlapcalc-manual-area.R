@@ -32,8 +32,10 @@ library(rgeos)
 library(rgdal)
 library(adehabitatHR)
 library(dplyr)
+
 #data
 locs <- read.csv("locsMigHR2.csv", as.is = TRUE, header = TRUE)
+
 #lists
 list.spr14 <- read.csv("spr14.csv", header = TRUE)
 numelk.spr14 <- nrow(list.spr14)
@@ -43,6 +45,7 @@ list.spr15 <- read.csv("spr15.csv", header = TRUE)
 numelk.spr15 <- nrow(list.spr15)
 list.fall15 <- read.csv("fall15.csv", header = TRUE)
 numelk.fall15 <- nrow(list.fall15)
+
 #projections
 latlong <- CRS("+init=epsg:4326")
 stateplane <- CRS("+init=epsg:2818")
