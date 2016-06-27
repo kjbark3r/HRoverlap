@@ -192,5 +192,8 @@ for(i in 1:numelk.fall15) {
   fall15[[i,2]] <- ao.fall15
 } 
 
+######################
+# COMBINE AND EXPORT DATA
 hr.manual <- full_join(hr.manual, fall15, by = "AnimalID")
 hr.manual <- hr.manual[,c("AnimalID", "spr14ao", "fall14ao", "spr15ao", "fall15ao")]
+write.csv(hr.manual, file = "overlap-manual.csv", row.names = FALSE)

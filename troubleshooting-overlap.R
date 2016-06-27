@@ -773,6 +773,40 @@ if( sfParallel() ) {
   #but not how many cores you're using
   #(that's what the above code is for)
 # aaand apparently that's all there is to it
+
+##############
+#running fall15ao one step at a time
+#bc when you reran it after fixing the seasons (winter15 -> 16)
+#it failed and R aborted
+#hopefully just bc i messed up the memory settings
+#############
+######################
+#FALL 2015 MIGRATION
+
+  #summer 2015
+  temp.sum15 <- subset(locs, AnimalID == 140560 & MigHR == "Summer 2015")
+  xy.sum15 <- data.frame("x" = temp.sum15$Long, "y" = temp.sum15$Lat)
+  ll.sum15 <- SpatialPointsDataFrame(xy.sum15, temp.sum15, proj4string = latlong)
+  sp.sum15 <- spTransform(ll.sum15, stateplane)
+  kud.sum15 <- kernelUD(sp.sum15, h="href", grid = 5000)
+  vol.sum15 <- getverticeshr(kud.sum15, percent = 95, ida = NULL, unin = "m", unout = "km")
+  
+  #winter 2016
+  temp.win16 <- subset(locs, AnimalID == 140560 & MigHR == "Winter 2016")
+  xy.win16 <- data.frame("x" = temp.win16$Long, "y" = temp.win16$Lat)
+  ll.win16 <- SpatialPointsDataFrame(xy.win16, temp.win16, proj4string = latlong)
+  sp.win16 <- spTransform(ll.win16, stateplane)
+  kud.win16 <- kernelUD(sp.win16, h="href", grid = 5000)
+  vol.win16 <- getverticeshr(kud.win16, percent = 95, ida = NULL, unin = "m", unout = "km")
+  a.win16 <- sapply(slot(vol.win16, "polygons"), slot, "area")
+  
+  #overlap - calc and store
+  i.fall15 <- gIntersection(vol.win16, vol.sum15, byid=FALSE)
+  ifelse(is.null(i.fall15), ai.fall15 <- 0, ai.fall15 <- sapply(slot(i.fall15, "polygons"), slot, "area"))
+  ao.fall15 <- ai.fall15/a.win16
+  fall15[[i,1]] <- elk
+  fall15[[i,2]] <- ao.fall15
+} 
  
 ##############
 #loading in seasonal data

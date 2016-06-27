@@ -27,23 +27,11 @@ rm(wd_workcomp, wd_laptop, wd_external)
 ##DATA AND LIBRARIES
 library(dplyr)
 
+#data - replace automated area overlap with manual calculation
 hro <- read.csv("homerangeoverlap.csv") #automated
 hrm <- read.csv("overlap-manual.csv") #manual
-
-#replacee automated area overlap with manual calculation
-
-####DELETE BELOW LINES AND REPLACE HRO <- LINE WITH COMMENTED OUT ONE EBELOW IT
-  ## This is to use kerneloverlap results for fall15ao
-  ## because I messed up the manual analysis for fall15
-  ## but I want to get a preliminary look at the data today
-hrm <- select(hrm, -fall15ao)
-hro <- select(hro, -c(spr14ao, fall14ao, spr15ao))
-# hro <- select(hro, -contains("ao"))
-
-
-#replace with manual area overlap calculations
+hro <- select(hro, -contains("ao"))
 hro <- full_join(hro, hrm, by = "AnimalID") 
-rm(hrm)
 
 #if want to reorder
 #  hr <- hr[,c("AnimalID", "spr14ao", "spr14ao.man"...)]
@@ -55,12 +43,28 @@ hro.look <- full_join(hro, look, by = "AnimalID")
 
 ################
 # manual vs automated area overlap
-par(mfrow=c(2, 2))
-plot(hr$spr14ao~hr$spr14ao.man, main = "Spring 2014")
-plot(hr$spr15ao~hr$spr15ao.man, main = "Spring 2015")
-plot(hr$fall14ao~hr$fall14ao.man, main = "Fall 2014")
-plot(hr$fall15ao~hr$fall15ao.man, main = "Fall 2015")
+##y = manual; x = automated
+#par(mfrow=c(2, 2))
+#plot(hro$spr14ao.x~hro$spr14ao.y, main = "Spring 2014")
+#plot(hro$spr15ao.x~hro$spr15ao.y, main = "Spring 2015")
+#plot(hro$fall14ao.x~hro$fall14ao.y, main = "Fall 2014")
+#plot(hro$fall15ao.x~hro$fall15ao.y, main = "Fall 2015")
 # awesome
+
+# automated area overlap vs volume intersection
+par(mfrow=c(2, 2))
+plot(hro$spr14ao~hro$spr14vi, main = "Spring 2014")
+plot(hro$spr15ao~hro$spr15vi, main = "Spring 2015")
+plot(hro$fall14ao~hro$fall14vi, main = "Fall 2014")
+plot(hro$fall15ao~hro$fall15vi, main = "Fall 2015")
+
+# manual area overlap vs volume intersection
+par(mfrow=c(2, 2))
+plot(hro$spr14ao~hro$spr14vi, main = "Spring 2014")
+plot(hro$spr15ao~hro$spr15vi, main = "Spring 2015")
+plot(hro$fall14ao~hro$fall14vi, main = "Fall 2014")
+plot(hro$fall15ao~hro$fall15vi, main = "Fall 2015")
+
 
 ################
 # histograms
