@@ -40,13 +40,16 @@ library(dplyr) #for joins
 #GPS DATA FROM COLLARS, PLUS MIGRATION SEASON/YEAR
 locs <- read.csv("collardata-locsonly-equalsampling.csv", as.is = TRUE, header = TRUE)
 locs$Date <- as.Date(locs$Date, "%Y-%m-%d")
-#can remove extraneous columns here#
-locs$MigHR <- ifelse(between(locs$Date, as.Date("2014-01-01"), as.Date("2014-03-31")), "Winter 2014", 
-                ifelse(between(locs$Date, as.Date("2014-06-01"), as.Date("2014-08-31")), "Summer 2014", 
-                  ifelse(between(locs$Date, as.Date("2015-01-01"), as.Date("2015-03-31")), "Winter 2015", 
-                    ifelse(between(locs$Date, as.Date("2015-06-01"), as.Date("2015-08-31")), "Summer 2015",
-                      ifelse(between(locs$Date, as.Date("2016-01-01"), as.Date("2016-03-31")), "Winter 2016",
+
+#change summer to only be july and august (to coincide with NSD dates)
+#and winter to only go through mid-march (bc i think one indiv migrated in late march one year)
+locs$MigHR <- ifelse(between(locs$Date, as.Date("2014-01-01"), as.Date("2014-03-15")), "Winter 2014", 
+                ifelse(between(locs$Date, as.Date("2014-07-01"), as.Date("2014-08-31")), "Summer 2014", 
+                  ifelse(between(locs$Date, as.Date("2015-01-01"), as.Date("2015-03-15")), "Winter 2015", 
+                    ifelse(between(locs$Date, as.Date("2015-07-01"), as.Date("2015-08-31")), "Summer 2015",
+                      ifelse(between(locs$Date, as.Date("2016-01-01"), as.Date("2016-03-15")), "Winter 2016",
                         ifelse(NA))))))
+# write.csv(locs, file = "locsMigHR3.csv", row.names = FALSE)
 
 #LISTS OF ANIMALS TO RUN
 #Because code to automate this takes too long to run on my subpar computer
@@ -86,12 +89,11 @@ for(i in 1:numelk.spr14) {
   xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
   
   #calculate area overlap and volume intersection
-  ao <- kerneloverlap(xy.spdf.sp[,22], method = "HR", percent = 95)
   vol <- kerneloverlap(xy.spdf.sp[,22], method = "VI", percent = 95, conditional = FALSE)
   
   #store results
   spr14[[i,1]] <- elk
-  spr14[[i,2]] <- ao[2,1]
+  spr14[[i,2]] <- NA
   spr14[[i,3]] <- vol[2,1]
 }    
 
@@ -114,12 +116,11 @@ for(i in 1:numelk.fall14) {
   xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
   
   #calculate area overlap and volume intersection
-  ao <- kerneloverlap(xy.spdf.sp[,22], method = "HR", percent = 95)
   vol <- kerneloverlap(xy.spdf.sp[,22], method = "VI", percent = 95, conditional = FALSE)
   
   #store results
   fall14[[i,1]] <- elk
-  fall14[[i,2]] <- ao[2,1]
+  fall14[[i,2]] <- NA
   fall14[[i,3]] <- vol[2,1]
 }    
 hr <- full_join(fall14, spr14, by = "AnimalID")
@@ -143,12 +144,11 @@ for(i in 1:numelk.spr15) {
   xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
   
   #calculate area overlap and volume intersection
-  ao <- kerneloverlap(xy.spdf.sp[,22], method = "HR", percent = 95)
   vol <- kerneloverlap(xy.spdf.sp[,22], method = "VI", percent = 95, conditional = FALSE)
   
   #store results
   spr15[[i,1]] <- elk
-  spr15[[i,2]] <- ao[2,1]
+  spr15[[i,2]] <- NA
   spr15[[i,3]] <- vol[2,1]
 }    
 hr <- full_join(hr, spr15, by = "AnimalID")
@@ -172,16 +172,14 @@ for(i in 1:numelk.fall15) {
   xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
   
   #calculate area overlap and volume intersection
-  ao <- kerneloverlap(xy.spdf.sp[,22], method = "HR", percent = 95)
   vol <- kerneloverlap(xy.spdf.sp[,22], method = "VI", percent = 95, conditional = FALSE)
   
   #store results
   fall15[[i,1]] <- elk
-  fall15[[i,2]] <- ao[2,1]
+  fall15[[i,2]] <- NA
   fall15[[i,3]] <- vol[2,1]
 } 
 hr <- full_join(hr, fall15, by = "AnimalID")
 
-hr <- hr[,c("AnimalID", "spr14ao", "spr14vi", "fall14ao", "fall14vi",
-                         "spr15ao", "spr15vi", "fall15ao", "fall15vi")]
+hr <- hr[,c("AnimalID", "spr14vi", "fall14vi", "spr15vi", "fall15vi")]
 write.csv(hr, file = "homerangeoverlap.csv", row.names = FALSE)

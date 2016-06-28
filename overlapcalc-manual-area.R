@@ -34,7 +34,7 @@ library(adehabitatHR)
 library(dplyr)
 
 #data
-locs <- read.csv("locsMigHR2.csv", as.is = TRUE, header = TRUE)
+locs <- read.csv("locsMigHR3.csv", as.is = TRUE, header = TRUE)
 
 #lists
 list.spr14 <- read.csv("spr14.csv", header = TRUE)
@@ -50,6 +50,9 @@ numelk.fall15 <- nrow(list.fall15)
 latlong <- CRS("+init=epsg:4326")
 stateplane <- CRS("+init=epsg:2818")
 
+#run on multiple processors
+library(snowfall)
+sfInit(parallel=TRUE, cpus=4)
 
 ###########################################################################################
 #CALCULATE AREA OVERLAP 
