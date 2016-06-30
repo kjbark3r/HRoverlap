@@ -44,23 +44,23 @@ locs$Date <- as.Date(locs$Date, "%Y-%m-%d")
 #change summer to only be july and august (to coincide with NSD dates)
 #and winter to only go through mid-march (bc i think one indiv migrated in late march one year)
 locs$MigHR <- ifelse(between(locs$Date, as.Date("2014-01-01"), as.Date("2014-03-15")), "Winter 2014", 
-                ifelse(between(locs$Date, as.Date("2014-07-01"), as.Date("2014-08-31")), "Summer 2014", 
-                  ifelse(between(locs$Date, as.Date("2015-01-01"), as.Date("2015-03-15")), "Winter 2015", 
-                    ifelse(between(locs$Date, as.Date("2015-07-01"), as.Date("2015-08-31")), "Summer 2015",
-                      ifelse(between(locs$Date, as.Date("2016-01-01"), as.Date("2016-03-15")), "Winter 2016",
-                        ifelse(NA))))))
+                     ifelse(between(locs$Date, as.Date("2014-07-01"), as.Date("2014-08-31")), "Summer 2014", 
+                            ifelse(between(locs$Date, as.Date("2015-01-01"), as.Date("2015-03-15")), "Winter 2015", 
+                                   ifelse(between(locs$Date, as.Date("2015-07-01"), as.Date("2015-08-31")), "Summer 2015",
+                                          ifelse(between(locs$Date, as.Date("2016-01-01"), as.Date("2016-03-15")), "Winter 2016",
+                                                 ifelse(NA))))))
 # write.csv(locs, file = "locsMigHR3.csv", row.names = FALSE)
 
 #LISTS OF ANIMALS TO RUN
 #Because code to automate this takes too long to run on my subpar computer
 list.spr14 <- read.csv("spr14.csv", header = TRUE)
-  numelk.spr14 <- nrow(list.spr14)
+numelk.spr14 <- nrow(list.spr14)
 list.fall14 <- read.csv("fall14.csv", header = TRUE)
-  numelk.fall14 <- nrow(list.fall14)
+numelk.fall14 <- nrow(list.fall14)
 list.spr15 <- read.csv("spr15.csv", header = TRUE)
-  numelk.spr15 <- nrow(list.spr15)
+numelk.spr15 <- nrow(list.spr15)
 list.fall15 <- read.csv("fall15.csv", header = TRUE)
-  numelk.fall15 <- nrow(list.fall15)
+numelk.fall15 <- nrow(list.fall15)
 
 #DEFINE PROJECTIONS
 latlong <- CRS("+init=epsg:4326")
@@ -182,4 +182,4 @@ for(i in 1:numelk.fall15) {
 hr <- full_join(hr, fall15, by = "AnimalID")
 
 hr <- hr[,c("AnimalID", "spr14vi", "fall14vi", "spr15vi", "fall15vi")]
-write.csv(hr, file = "homerangeoverlap.csv", row.names = FALSE)
+write.csv(hr, file = "overlap-auto-vi.csv", row.names = FALSE)
