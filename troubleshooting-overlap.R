@@ -823,7 +823,53 @@ hr.manual <- full_join(fall14, spr14, by = "AnimalID")
 	hr.manual <- hr.manual[,c("AnimalID", "spr14ao", "fall14ao", "spr15ao", "fall15ao")]
 #you could probably pipe this... if you have time to play
 
+##############
+#checking whether spring14 code messed up
+#or just ran out of memory at the end
+#(currently rerunning on work comp to verify)
+############# 
 
+	# 151580
+tmp.w1 <- subset(locs, AnimalID == 151580 & MigHR == "Winter 2015")
+tmp.xy1 <- data.frame("x" = tmp.w1$Long, "y" = tmp.w1$Lat)
+tmp.ll1 <- SpatialPointsDataFrame(tmp.xy1, tmp.w1, proj4string = latlong)
+tmp.sp1 <- spTransform(tmp.ll1, stateplane)
+tmp.kud1 <- kernelUD(tmp.sp1, h="href", grid = 5000)
+tmp.vol1 <- getverticeshr(tmp.kud1, percent = 95, ida = NULL, unin = "m", unout = "km")
+tmp.a1 <- sapply(slot(tmp.vol1, "polygons"), slot, "area")
+  
+spr15 <- data.frame(matrix(ncol = 2, nrow = numelk.spr15)) #create df wo NAs
+colnames(spr15) <- c("AnimalID", "spr15ao")
+
+for(i in 1:numelk.spr15) {
+  elk <- list.spr15[i,]
+  
+  #winter 2015
+  temp.win15 <- subset(locs, AnimalID == elk & MigHR == "Winter 2015")
+  xy.win15 <- data.frame("x" = temp.win15$Long, "y" = temp.win15$Lat)
+  ll.win15 <- SpatialPointsDataFrame(xy.win15, temp.win15, proj4string = latlong)
+  sp.win15 <- spTransform(ll.win15, stateplane)
+  kud.win15 <- kernelUD(sp.win15, h="href", grid = 5000)
+  vol.win15 <- getverticeshr(kud.win15, percent = 95, ida = NULL, unin = "m", unout = "km")
+  a.win15 <- sapply(slot(vol.win15, "polygons"), slot, "area")
+  
+  #summer 2015
+  temp.sum15 <- subset(locs, AnimalID == elk & MigHR == "Summer 2015")
+  xy.sum15 <- data.frame("x" = temp.sum15$Long, "y" = temp.sum15$Lat)
+  ll.sum15 <- SpatialPointsDataFrame(xy.sum15, temp.sum15, proj4string = latlong)
+  sp.sum15 <- spTransform(ll.sum15, stateplane)
+  kud.sum15 <- kernelUD(sp.sum15, h="href", grid = 5000)
+  vol.sum15 <- getverticeshr(kud.sum15, percent = 95, ida = NULL, unin = "m", unout = "km")
+  
+  #overlap - calc and store
+  i.spr15 <- gIntersection(vol.win15, vol.sum15, byid=FALSE)
+  ifelse(is.null(i.spr15), ai.spr15 <- 0, ai.spr15 <- sapply(slot(i.spr15, "polygons"), slot, "area"))
+  ao.spr15 <- ai.spr15/a.win15  
+  spr15[[i,1]] <- elk
+  spr15[[i,2]] <- ao.spr15
+} 
+
+	
 ############################
 ## MISC HELPFUL STUFF
 ############################
