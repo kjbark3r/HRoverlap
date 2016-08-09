@@ -1,5 +1,5 @@
 ######################################################
-## Migration - Area and Volume Overlap Calculations ##
+## Migration - Volume Overlap Calculations ##
 ########  NSERP - Kristin Barker - June 2016  ########
 ######################################################
 
@@ -67,14 +67,14 @@ latlong <- CRS("+init=epsg:4326")
 stateplane <- CRS("+init=epsg:2818")
 
 ###########################################################################################
-#CALCULATE AREA AND VOLUME OVERLAP
+#CALCULATE VOLUME OVERLAP
 ###########################################################################################
 
 ######################
 #SPRING 2014 MIGRATION
 
-spr14 <- data.frame(matrix(ncol = 3, nrow = numelk.spr14)) #create df wo NAs
-colnames(spr14) <- c("AnimalID", "spr14ao", "spr14vi")
+spr14 <- data.frame(matrix(ncol = 2, nrow = numelk.spr14)) #create df wo NAs
+colnames(spr14) <- c("AnimalID", "SprVI")
 
 for(i in 1:numelk.spr14) {
   elk <- list.spr14[i,]
@@ -93,15 +93,15 @@ for(i in 1:numelk.spr14) {
   
   #store results
   spr14[[i,1]] <- elk
-  spr14[[i,2]] <- NA
-  spr14[[i,3]] <- vol[2,1]
+  spr14[[i,2]] <- vol[2,1]
 }    
+spr14$IndivYr <- paste(spr14$AnimalID, "-14", sep="")
 
 ######################
 #FALL 2014 MIGRATION
 
-fall14 <- data.frame(matrix(ncol = 3, nrow = numelk.fall14)) #create df wo NAs
-colnames(fall14) <- c("AnimalID", "fall14ao", "fall14vi")
+fall14 <- data.frame(matrix(ncol = 2, nrow = numelk.fall14)) #create df wo NAs
+colnames(fall14) <- c("AnimalID", "FallVI")
 
 for(i in 1:numelk.fall14) {
   elk <- list.fall14[i,]
@@ -120,16 +120,18 @@ for(i in 1:numelk.fall14) {
   
   #store results
   fall14[[i,1]] <- elk
-  fall14[[i,2]] <- NA
-  fall14[[i,3]] <- vol[2,1]
+  fall14[[i,2]] <- vol[2,1]
 }    
-hr <- full_join(fall14, spr14, by = "AnimalID")
+fall14$IndivYr <- paste(fall14$AnimalID, "-14", sep="")
+hr14 <- full_join(spr14, fall14, by = c("IndivYr", "AnimalID")) %>%
+  select(IndivYr, AnimalID, SprVI, FallVI)
+  
 
 ######################
 #SPRING 2015 MIGRATION
 
-spr15 <- data.frame(matrix(ncol = 3, nrow = numelk.spr15)) #create df wo NAs
-colnames(spr15) <- c("AnimalID", "spr15ao", "spr15vi")
+spr15 <- data.frame(matrix(ncol = 2, nrow = numelk.spr15)) #create df wo NAs
+colnames(spr15) <- c("AnimalID", "SprVI")
 
 for(i in 1:numelk.spr15) {
   elk <- list.spr15[i,]
@@ -148,16 +150,15 @@ for(i in 1:numelk.spr15) {
   
   #store results
   spr15[[i,1]] <- elk
-  spr15[[i,2]] <- NA
-  spr15[[i,3]] <- vol[2,1]
+  spr15[[i,2]] <- vol[2,1]
 }    
-hr <- full_join(hr, spr15, by = "AnimalID")
+spr15$IndivYr <- paste(spr15$AnimalID, "-15", sep="")
 
 ######################
 #FALL 2015 MIGRATION
 
-fall15 <- data.frame(matrix(ncol = 3, nrow = numelk.fall15)) #create df wo NAs
-colnames(fall15) <- c("AnimalID", "fall15ao", "fall15vi")
+fall15 <- data.frame(matrix(ncol = 2, nrow = numelk.fall15)) #create df wo NAs
+colnames(fall15) <- c("AnimalID", "FallVI")
 
 for(i in 1:numelk.fall15) {
   elk <- list.fall15[i,]
@@ -176,10 +177,12 @@ for(i in 1:numelk.fall15) {
   
   #store results
   fall15[[i,1]] <- elk
-  fall15[[i,2]] <- NA
-  fall15[[i,3]] <- vol[2,1]
+  fall15[[i,2]] <- vol[2,1]
 } 
-hr <- full_join(hr, fall15, by = "AnimalID")
+fall15$IndivYr <- paste(fall15$AnimalID, "-15", sep="")
 
-hr <- hr[,c("AnimalID", "spr14vi", "fall14vi", "spr15vi", "fall15vi")]
-write.csv(hr, file = "overlap-auto-vi.csv", row.names = FALSE)
+hr15 <- full_join(spr15, fall15, by = c("IndivYr", "AnimalID")) %>%
+  select(IndivYr, AnimalID, SprVI, FallVI)
+
+hr <- bind_rows(hr14, hr15)
+write.csv(hr, file = "volumeintersection.csv", row.names = FALSE)

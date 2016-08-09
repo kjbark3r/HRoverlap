@@ -7,7 +7,6 @@
 ####Work computer, personal laptop, or external hard drive
 wd_workcomp <- "C:\\Users\\kristin.barker\\Documents\\GitHub\\HRoverlap"
 wd_laptop <- "C:\\Users\\kjbark3r\\Documents\\GitHub\\HRoverlap"
-wd_external <- "E:\\Kristins\\HRoverlap\\"
 
 if (file.exists(wd_workcomp)) {
   setwd(wd_workcomp)
@@ -15,22 +14,17 @@ if (file.exists(wd_workcomp)) {
   if(file.exists(wd_laptop)) {
     setwd(wd_laptop)
   } else {
-    if(file.exists(wd_external)) {
-      setwd(wd_external)
-    } else {
       cat("Are you SURE you got that file path right?\n")
     }
   }
-}
-rm(wd_workcomp, wd_laptop, wd_external)
+rm(wd_workcomp, wd_laptop)
 
 ##DATA AND LIBRARIES
 library(dplyr)
 
 #data - replace automated area overlap with manual calculation
-hro <- read.csv("homerangeoverlap.csv") #automated
-hrm <- read.csv("overlap-manual.csv") #manual
-hro <- select(hro, -contains("ao"))
+hro <- read.csv("overlap-auto-vi.csv") #automated
+hrm <- read.csv("overlap-manual-2.csv") #manual
 hro <- full_join(hro, hrm, by = "AnimalID") 
 
 #if want to reorder

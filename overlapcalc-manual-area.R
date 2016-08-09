@@ -200,3 +200,21 @@ for(i in 1:numelk.fall15) {
 hr.manual <- full_join(hr.manual, fall15, by = "AnimalID")
 hr.manual <- hr.manual[,c("AnimalID", "spr14ao", "fall14ao", "spr15ao", "fall15ao")]
 write.csv(hr.manual, file = "overlap-manual-2.csv", row.names = FALSE)
+
+######################
+# MAKING DATA LONGFORM BY INDIVYR, RATHER THAN ANIMAL ID
+# WITHOUT RE-RUNNING CODE (BC IT TAKES FOR.EV.ER.)
+
+library(tidyr)
+
+
+# steps
+# split out 2014 data
+  # add indivyr
+  # rename columns (SprAO, FallAO)
+# split out 2015 data
+  # add indivyr
+  # rename columns as above
+#bind_rows
+hro <- read.csv("overlap-manual-2.csv") %>%
+  gather(key = , value = 

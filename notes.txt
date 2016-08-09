@@ -1,0 +1,12 @@
+notes - finalizing the home range analysis - aug 2016
+
+volume intersection looks ok
+area overlap (the manual one) looks fucked up for some of them
+	which sucks, because it takes forfuckingever to run
+  -issues: NAs in spr15ao that aren't NA in spr15vi
+	-all indivs that stopped transmitting in fall 2015
+
+narrowing down the issue
+-the indivs are in the elklist for spr15
+-Winter 2015 is correctly identified in MigHr of locs
+
