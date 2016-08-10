@@ -197,9 +197,21 @@ for(i in 1:numelk.fall15) {
 
 ######################
 # COMBINE AND EXPORT DATA
+hr.manual <- full_join(hr.manual, spr15, by = "AnimalID")
 hr.manual <- full_join(hr.manual, fall15, by = "AnimalID")
 hr.manual <- hr.manual[,c("AnimalID", "spr14ao", "fall14ao", "spr15ao", "fall15ao")]
 write.csv(hr.manual, file = "overlap-manual-2.csv", row.names = FALSE)
+
+# had to re-run spr15 manually after realizing memory constraints caused NAs the first run
+  # replacing incorrect data with the re-run
+spr15 <- read.csv("spr15-ao-lonerun.csv")
+ao <- read.csv("overlap-manual-2.csv") %>%
+  select(-spr15ao) %>%
+  left_join(spr15, by = "AnimalID") %>%
+  select(AnimalID, spr14ao, fall14ao, spr15ao, fall15ao) 
+write.csv(ao, file = "areaoverlap.csv", row.names=FALSE)
+
+
 
 ######################
 # MAKING DATA LONGFORM BY INDIVYR, RATHER THAN ANIMAL ID
@@ -209,6 +221,8 @@ library(tidyr)
 
 
 # steps
+# add spr15 manually
+# h
 # split out 2014 data
   # add indivyr
   # rename columns (SprAO, FallAO)

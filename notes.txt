@@ -9,4 +9,5 @@ area overlap (the manual one) looks fucked up for some of them
 narrowing down the issue
 -the indivs are in the elklist for spr15
 -Winter 2015 is correctly identified in MigHr of locs
+-actually i don't think they're on the elklist. fix and rerun.
 
