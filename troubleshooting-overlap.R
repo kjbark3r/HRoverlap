@@ -823,11 +823,39 @@ hr.manual <- full_join(fall14, spr14, by = "AnimalID")
 	hr.manual <- hr.manual[,c("AnimalID", "spr14ao", "fall14ao", "spr15ao", "fall15ao")]
 #you could probably pipe this... if you have time to play
 
+<<<<<<< HEAD
+	
+#### longforming data ####
+
+#separate seasons
+spr14 <- select(ao, c(AnimalID, spr14ao)) %>%
+	  rename(SprAO = spr14ao)
+spr14$IndivYr <- paste(spr14$AnimalID, "-14", sep="")
+
+fall14 <- select(ao, c(AnimalID, fall14ao)) %>%
+  rename(FallAO = fall14ao) %>%
+fall14$IndivYr <- paste(fall14$AnimalID, "-14", sep="")
+
+spr15 <- select(ao, c(AnimalID, spr15ao))%>%
+  rename(SprAO = spr15ao)
+spr15$IndivYr <- paste(spr15$AnimalID, "-15", sep="")
+
+fall15 <- select(ao, c(AnimalID, fall15ao))%>%
+  rename(FallAO = fall15ao)
+fall15$IndivYr <- paste(fall15$AnimalID, "-15", sep="")
+
+ao14 <- full_join(spr14, fall14, by = c("IndivYr", "AnimalID"))
+ao15 <- full_join(spr15, fall15, by = c("IndivYr", "AnimalID"))
+ao <- bind_rows(ao14, ao15) %>%
+  select(IndivYr, AnimalID, SprAO, FallAO)
+
+=======
 ##############
 #checking whether spring14 code messed up
 #or just ran out of memory at the end
 #(currently rerunning on work comp to verify)
 ############# 
+>>>>>>> f099e9b7ad2f6fee1da7dd53de1a6fb9c456f6f3
 
 	# 151580
 tmp.w1 <- subset(locs, AnimalID == 151580 & MigHR == "Winter 2015")

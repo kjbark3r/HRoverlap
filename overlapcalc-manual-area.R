@@ -202,33 +202,42 @@ hr.manual <- full_join(hr.manual, fall15, by = "AnimalID")
 hr.manual <- hr.manual[,c("AnimalID", "spr14ao", "fall14ao", "spr15ao", "fall15ao")]
 write.csv(hr.manual, file = "overlap-manual-2.csv", row.names = FALSE)
 
+######################
+
 # had to re-run spr15 manually after realizing memory constraints caused NAs the first run
   # replacing incorrect data with the re-run
+
 spr15 <- read.csv("spr15-ao-lonerun.csv")
 ao <- read.csv("overlap-manual-2.csv") %>%
   select(-spr15ao) %>%
   left_join(spr15, by = "AnimalID") %>%
   select(AnimalID, spr14ao, fall14ao, spr15ao, fall15ao) 
-write.csv(ao, file = "areaoverlap.csv", row.names=FALSE)
 
 
-
-######################
-# MAKING DATA LONGFORM BY INDIVYR, RATHER THAN ANIMAL ID
-# WITHOUT RE-RUNNING CODE (BC IT TAKES FOR.EV.ER.)
+# make data longform by individual elk-yr
 
 library(tidyr)
+spr14 <- select(ao, c(AnimalID, spr14ao)) %>%
+  rename(SprAO = spr14ao)
+spr14$IndivYr <- paste(spr14$AnimalID, "-14", sep="")
 
+fall14 <- select(ao, c(AnimalID, fall14ao)) %>%
+  rename(FallAO = fall14ao) %>%
+  fall14$IndivYr <- paste(fall14$AnimalID, "-14", sep="")
 
-# steps
-# add spr15 manually
-# h
-# split out 2014 data
-  # add indivyr
-  # rename columns (SprAO, FallAO)
-# split out 2015 data
-  # add indivyr
-  # rename columns as above
-#bind_rows
-hro <- read.csv("overlap-manual-2.csv") %>%
-  gather(key = , value = 
+spr15 <- select(ao, c(AnimalID, spr15ao))%>%
+  rename(SprAO = spr15ao)
+spr15$IndivYr <- paste(spr15$AnimalID, "-15", sep="")
+
+fall15 <- select(ao, c(AnimalID, fall15ao))%>%
+  rename(FallAO = fall15ao)
+fall15$IndivYr <- paste(fall15$AnimalID, "-15", sep="")
+
+ao14 <- full_join(spr14, fall14, by = c("IndivYr", "AnimalID"))
+ao15 <- full_join(spr15, fall15, by = c("IndivYr", "AnimalID"))
+ao <- bind_rows(ao14, ao15) %>%
+  select(IndivYr, AnimalID, SprAO, FallAO)
+write.csv(ao, file = "areaoverlap.csv", row.names=FALSE)
+## note to self - get rid of full NA rows in this and NSD data
+## then combine them
+## then play play play! :)

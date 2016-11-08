@@ -27,7 +27,7 @@ rm(wd_workcomp, wd_laptop, wd_external)
 ##LOAD PACKAGES
 library(sp) #for kernel centroid estimate
 library(adehabitatHR) #for kernel centroid estimate
-library(raster) #prob don't need this one here
+#library(raster) #prob don't need this one here
 library(rgdal) #for latlong/stateplane conversions
 library(gsubfn)
 library(maptools) #for writeSpatialShape
@@ -41,14 +41,17 @@ library(dplyr) #for joins
 locs <- read.csv("collardata-locsonly-equalsampling.csv", as.is = TRUE, header = TRUE)
 locs$Date <- as.Date(locs$Date, "%Y-%m-%d")
 
-#change summer to only be july and august (to coincide with NSD dates)
-#and winter to only go through mid-march (bc i think one indiv migrated in late march one year)
+# summer = july and august (to coincide with NSD dates)
+# winter only through mid-march (bc i think one indiv migrated in late march one year)
 locs$MigHR <- ifelse(between(locs$Date, as.Date("2014-01-01"), as.Date("2014-03-15")), "Winter 2014", 
                      ifelse(between(locs$Date, as.Date("2014-07-01"), as.Date("2014-08-31")), "Summer 2014", 
                             ifelse(between(locs$Date, as.Date("2015-01-01"), as.Date("2015-03-15")), "Winter 2015", 
                                    ifelse(between(locs$Date, as.Date("2015-07-01"), as.Date("2015-08-31")), "Summer 2015",
                                           ifelse(between(locs$Date, as.Date("2016-01-01"), as.Date("2016-03-15")), "Winter 2016",
                                                  ifelse(NA))))))
+locs$IndivYr <- ifelse(locs$Date < "2015-01-01", 
+                       paste(locs$AnimalID, "-14", sep=""),
+                       paste(locs$AnimalID, "-15", sep=""))
 # write.csv(locs, file = "locsMigHR3.csv", row.names = FALSE)
 
 #LISTS OF ANIMALS TO RUN
@@ -124,7 +127,7 @@ for(i in 1:numelk.fall14) {
 }    
 fall14$IndivYr <- paste(fall14$AnimalID, "-14", sep="")
 hr14 <- full_join(spr14, fall14, by = c("IndivYr", "AnimalID")) %>%
-  select(IndivYr, AnimalID, SprVI, FallVI)
+  select(IndivYr, AnimalID, SprVI, FallVI) # order columns
   
 
 ######################
@@ -182,7 +185,14 @@ for(i in 1:numelk.fall15) {
 fall15$IndivYr <- paste(fall15$AnimalID, "-15", sep="")
 
 hr15 <- full_join(spr15, fall15, by = c("IndivYr", "AnimalID")) %>%
-  select(IndivYr, AnimalID, SprVI, FallVI)
+  select(IndivYr, AnimalID, SprVI, FallVI) # order columns
 
-hr <- bind_rows(hr14, hr15)
+# REMOVE MALES AND EXPORT
+sex <- locs %>%
+  dplyr::select(IndivYr, Sex) %>%
+  distinct()
+hr <- bind_rows(hr14, hr15) %>%
+  left_join(sex) %>%
+  filter(Sex == "Female") %>% 
+  dplyr::select(IndivYr, AnimalID, SprVI, FallVI)
 write.csv(hr, file = "volumeintersection.csv", row.names = FALSE)
