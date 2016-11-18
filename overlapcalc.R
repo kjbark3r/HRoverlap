@@ -1,6 +1,6 @@
 ######################################################
-## Migration - Volume Overlap Calculations ##
-########  NSERP - Kristin Barker - June 2016  ########
+## Migration - Volume Overlap Calculations  ##########
+## NSERP - Kristin Barker - June 2016  		        ##
 ######################################################
 
 ##SET WD
@@ -27,11 +27,181 @@ rm(wd_workcomp, wd_laptop, wd_external)
 ##LOAD PACKAGES
 library(sp) #for kernel centroid estimate
 library(adehabitatHR) #for kernel centroid estimate
-#library(raster) #prob don't need this one here
 library(rgdal) #for latlong/stateplane conversions
 library(gsubfn)
 library(maptools) #for writeSpatialShape
 library(dplyr) #for joins
+
+
+#################################################
+#### UPDATES FOR NUTRITION/SURVIVAL ANALYSIS ####
+# making time pd correspond to nutrition time pd#
+# and only looking at summer migration          #
+#################################################
+
+#GPS DATA FROM COLLARS, PLUS MIGRATION SEASON/YEAR
+locs <- read.csv("../../ElkDatabase/collardata-locsonly-equalsampling.csv", as.is = TRUE, header = TRUE)
+locs$Date <- as.Date(locs$Date, "%Y-%m-%d")
+
+# summer = july 15 - aug 31 (match biomass sampling/gdm estimation time pd)
+# winter 2014 starts feb 26 2014 bc day after last capture
+  # other yrs set to be same length of time as summer timeframe
+locs$MigHR <- ifelse(between(locs$Date, as.Date("2014-02-26"), as.Date("2014-03-31")), "Winter 2014", 
+                     ifelse(between(locs$Date, as.Date("2014-07-15"), as.Date("2014-08-31")), "Summer 2014", 
+                            ifelse(between(locs$Date, as.Date("2015-02-15"), as.Date("2015-03-31")), "Winter 2015", 
+                                   ifelse(between(locs$Date, as.Date("2015-07-15"), as.Date("2015-08-31")), "Summer 2015",
+                                          ifelse(between(locs$Date, as.Date("2016-02-15"), as.Date("2016-03-31")), "Winter 2016",
+                                                 ifelse(NA))))))
+
+# projections
+latlong <- CRS("+init=epsg:4326")
+stateplane <- CRS("+init=epsg:2818")
+
+# lists of animals per searon
+list.spr14 <- read.csv("spr14.csv", header = TRUE)
+numelk.spr14 <- nrow(list.spr14)
+list.spr15 <- read.csv("spr15.csv", header = TRUE)
+numelk.spr15 <- nrow(list.spr15)
+
+#############
+#### 95% ####
+
+######################
+#SPRING 2014 MIGRATION
+
+spr14 <- data.frame(matrix(ncol = 2, nrow = numelk.spr14)) #create df wo NAs
+colnames(spr14) <- c("AnimalID", "SprVI")
+
+for(i in 1:numelk.spr14) {
+  elk <- list.spr14[i,]
+  
+  #subset individual and seasonal locations
+  temp_dat_spr14 <- subset(locs, AnimalID == elk) 
+  temp_dat_spr14 <- subset(temp_dat_spr14, MigHR == "Winter 2014" | MigHR == "Summer 2014")
+  
+  #Get xy points, write to dataframe, to spatial data frame, to stateplane projection
+  xy <- data.frame("x"=temp_dat_spr14$Long,"y"=temp_dat_spr14$Lat)
+  xy.spdf.ll <- SpatialPointsDataFrame(xy, temp_dat_spr14, proj4string = latlong)
+  xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
+
+  #calculate kde and 95% volume intersection ([,2] is AnimalID; [,20] is MigHR)
+  kud <- kernelUD(xy.spdf.sp[,20], h = "href", same4all=TRUE) #LSCV not alwys converged
+  vol <- kerneloverlaphr(kud, method = "VI", percent = 95, conditional = TRUE)
+  
+  #store results
+  spr14[[i,1]] <- elk
+  spr14[[i,2]] <- vol[2,1]
+}    
+spr14$IndivYr <- paste(spr14$AnimalID, "-14", sep="")
+
+######################
+#SPRING 2015 MIGRATION
+
+spr15 <- data.frame(matrix(ncol = 2, nrow = numelk.spr15)) #create df wo NAs
+colnames(spr15) <- c("AnimalID", "SprVI")
+
+for(i in 1:numelk.spr15) {
+  elk <- list.spr15[i,]
+  
+  #subset individual and seasonal locations
+  temp_dat_spr15 <- subset(locs, AnimalID == elk) 
+  temp_dat_spr15 <- subset(temp_dat_spr15, MigHR == "Winter 2015" | MigHR == "Summer 2015")
+  
+  #Get xy points, write points to dataframe, to spatial data frame, to stateplane projection
+  xy <- data.frame("x"=temp_dat_spr15$Long,"y"=temp_dat_spr15$Lat)
+  xy.spdf.ll <- SpatialPointsDataFrame(xy, temp_dat_spr15, proj4string = latlong)
+  xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
+  
+  #calculate kde and 95% volume intersection ([,2] is AnimalID; [,20] is MigHR)
+  kud <- kernelUD(xy.spdf.sp[,20], h = "href", same4all=TRUE) #LSCV not alwys converged
+  vol <- kerneloverlaphr(kud, method = "VI", percent = 95, conditional = TRUE)
+  
+  #store results
+  spr15[[i,1]] <- elk
+  spr15[[i,2]] <- vol[2,1]
+}    
+spr15$IndivYr <- paste(spr15$AnimalID, "-15", sep="")
+
+# combine data, remove males, and export
+sex <- distinct(dplyr::select(locs, AnimalID, Sex))
+vi <- bind_rows(spr14, spr15) %>%
+  left_join(sex, by = "AnimalID") %>%
+  filter(Sex == "Female")
+write.csv(vi, file = "volumeintersection.csv", row.names=F)
+
+
+#############
+#### 50% ####
+
+######################
+#SPRING 2014 MIGRATION
+
+spr14 <- data.frame(matrix(ncol = 2, nrow = numelk.spr14)) #create df wo NAs
+colnames(spr14) <- c("AnimalID", "SprVI")
+
+for(i in 1:numelk.spr14) {
+  elk <- list.spr14[i,]
+  
+  #subset individual and seasonal locations
+  temp_dat_spr14 <- subset(locs, AnimalID == elk) 
+  temp_dat_spr14 <- subset(temp_dat_spr14, MigHR == "Winter 2014" | MigHR == "Summer 2014")
+  
+  #Get xy points, write to dataframe, to spatial data frame, to stateplane projection
+  xy <- data.frame("x"=temp_dat_spr14$Long,"y"=temp_dat_spr14$Lat)
+  xy.spdf.ll <- SpatialPointsDataFrame(xy, temp_dat_spr14, proj4string = latlong)
+  xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
+  
+  #calculate kde and 50% volume intersection ([,2] is AnimalID; [,20] is MigHR)
+  kud <- kernelUD(xy.spdf.sp[,20], h = "href", same4all=TRUE) #LSCV not alwys converged
+  vol <- kerneloverlaphr(kud, method = "VI", percent = 50, conditional = TRUE)
+  
+  #store results
+  spr14[[i,1]] <- elk
+  spr14[[i,2]] <- vol[2,1]
+}    
+spr14$IndivYr <- paste(spr14$AnimalID, "-14", sep="")
+
+######################
+#SPRING 2015 MIGRATION
+
+spr15 <- data.frame(matrix(ncol = 2, nrow = numelk.spr15)) #create df wo NAs
+colnames(spr15) <- c("AnimalID", "SprVI")
+
+for(i in 1:numelk.spr15) {
+  elk <- list.spr15[i,]
+  
+  #subset individual and seasonal locations
+  temp_dat_spr15 <- subset(locs, AnimalID == elk) 
+  temp_dat_spr15 <- subset(temp_dat_spr15, MigHR == "Winter 2015" | MigHR == "Summer 2015")
+  
+  #Get xy points, write points to dataframe, to spatial data frame, to stateplane projection
+  xy <- data.frame("x"=temp_dat_spr15$Long,"y"=temp_dat_spr15$Lat)
+  xy.spdf.ll <- SpatialPointsDataFrame(xy, temp_dat_spr15, proj4string = latlong)
+  xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
+  
+  #calculate kde and 50% volume intersection ([,2] is AnimalID; [,20] is MigHR)
+  kud <- kernelUD(xy.spdf.sp[,20], h = "href", same4all=TRUE) #LSCV not alwys converged
+  vol <- kerneloverlaphr(kud, method = "VI", percent = 50, conditional = TRUE)
+  
+  #store results
+  spr15[[i,1]] <- elk
+  spr15[[i,2]] <- vol[2,1]
+}    
+spr15$IndivYr <- paste(spr15$AnimalID, "-15", sep="")
+
+# combine data, remove males, and export
+sex <- distinct(dplyr::select(locs, AnimalID, Sex))
+vi50 <- bind_rows(spr14, spr15) %>%
+  left_join(sex, by = "AnimalID") %>%
+  filter(Sex == "Female")
+write.csv(vi50, file = "volumeintersection50.csv", row.names=F)
+
+
+###########################################################################################
+#CALCULATE VOLUME OVERLAP                                                                 #
+# older code                                                                           ####
+# includes both fall and spring; used in preliminary analyses                             #
+###########################################################################################
 
 ###########################################################################################
 #SET UP DATA
@@ -52,10 +222,9 @@ locs$MigHR <- ifelse(between(locs$Date, as.Date("2014-01-01"), as.Date("2014-03-
 locs$IndivYr <- ifelse(locs$Date < "2015-01-01", 
                        paste(locs$AnimalID, "-14", sep=""),
                        paste(locs$AnimalID, "-15", sep=""))
-# write.csv(locs, file = "locsMigHR3.csv", row.names = FALSE)
+# write.csv(locs, file = "locsMigHR.csv", row.names = FALSE)
 
 #LISTS OF ANIMALS TO RUN
-#Because code to automate this takes too long to run on my subpar computer
 list.spr14 <- read.csv("spr14.csv", header = TRUE)
 numelk.spr14 <- nrow(list.spr14)
 list.fall14 <- read.csv("fall14.csv", header = TRUE)
@@ -68,10 +237,6 @@ numelk.fall15 <- nrow(list.fall15)
 #DEFINE PROJECTIONS
 latlong <- CRS("+init=epsg:4326")
 stateplane <- CRS("+init=epsg:2818")
-
-###########################################################################################
-#CALCULATE VOLUME OVERLAP
-###########################################################################################
 
 ######################
 #SPRING 2014 MIGRATION
@@ -196,167 +361,3 @@ hr <- bind_rows(hr14, hr15) %>%
   filter(Sex == "Female") %>% 
   dplyr::select(IndivYr, AnimalID, SprVI, FallVI)
 write.csv(hr, file = "volumeintersection.csv", row.names = FALSE)
-
-
-#################################################
-#### UPDATES FOR NUTRITION/SURVIVAL ANALYSIS ####
-# making time pd correspond to nutrition time pd #
-# only looking at summer migration #
-#################################################
-
-#GPS DATA FROM COLLARS, PLUS MIGRATION SEASON/YEAR
-locs <- read.csv("../../ElkDatabase/collardata-locsonly-equalsampling.csv", as.is = TRUE, header = TRUE)
-locs$Date <- as.Date(locs$Date, "%Y-%m-%d")
-
-# summer = july 15 - aug 31 (match biomass sampling/gdm estimation time pd)
-# winter = starts feb 26 2014 bc day after last capture
-  # other yrs set to be same length of time as summer timeframe
-locs$MigHR <- ifelse(between(locs$Date, as.Date("2014-02-26"), as.Date("2014-03-31")), "Winter 2014", 
-                     ifelse(between(locs$Date, as.Date("2014-07-15"), as.Date("2014-08-31")), "Summer 2014", 
-                            ifelse(between(locs$Date, as.Date("2015-02-15"), as.Date("2015-03-31")), "Winter 2015", 
-                                   ifelse(between(locs$Date, as.Date("2015-07-15"), as.Date("2015-08-31")), "Summer 2015",
-                                          ifelse(between(locs$Date, as.Date("2016-02-15"), as.Date("2016-03-31")), "Winter 2016",
-                                                 ifelse(NA))))))
-
-# projections
-latlong <- CRS("+init=epsg:4326")
-stateplane <- CRS("+init=epsg:2818")
-
-# lists of animals per searon
-list.spr14 <- read.csv("spr14.csv", header = TRUE)
-numelk.spr14 <- nrow(list.spr14)
-list.spr15 <- read.csv("spr15.csv", header = TRUE)
-numelk.spr15 <- nrow(list.spr15)
-
-#############
-#### 95% ####
-
-######################
-#SPRING 2014 MIGRATION
-
-spr14 <- data.frame(matrix(ncol = 2, nrow = numelk.spr14)) #create df wo NAs
-colnames(spr14) <- c("AnimalID", "SprVI")
-
-for(i in 1:numelk.spr14) {
-  elk <- list.spr14[i,]
-  
-  #subset individual and seasonal locations
-  temp_dat_spr14 <- subset(locs, AnimalID == elk) 
-  temp_dat_spr14 <- subset(temp_dat_spr14, MigHR == "Winter 2014" | MigHR == "Summer 2014")
-  
-  #Get xy points, write to dataframe, to spatial data frame, to stateplane projection
-  xy <- data.frame("x"=temp_dat_spr14$Long,"y"=temp_dat_spr14$Lat)
-  xy.spdf.ll <- SpatialPointsDataFrame(xy, temp_dat_spr14, proj4string = latlong)
-  xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
-
-  #calculate kde and 95% volume intersection ([,2] is AnimalID; [,20] is MigHR)
-  kud <- kernelUD(xy.spdf.sp[,20], h = "href", same4all=TRUE) #LSCV not alwys converged
-  vol <- kerneloverlaphr(kud, method = "VI", percent = 95, conditional = TRUE)
-  
-  #store results
-  spr14[[i,1]] <- elk
-  spr14[[i,2]] <- vol[2,1]
-}    
-spr14$IndivYr <- paste(spr14$AnimalID, "-14", sep="")
-
-######################
-#SPRING 2015 MIGRATION
-
-spr15 <- data.frame(matrix(ncol = 2, nrow = numelk.spr15)) #create df wo NAs
-colnames(spr15) <- c("AnimalID", "SprVI")
-
-for(i in 1:numelk.spr15) {
-  elk <- list.spr15[i,]
-  
-  #subset individual and seasonal locations
-  temp_dat_spr15 <- subset(locs, AnimalID == elk) 
-  temp_dat_spr15 <- subset(temp_dat_spr15, MigHR == "Winter 2015" | MigHR == "Summer 2015")
-  
-  #Get xy points, write points to dataframe, to spatial data frame, to stateplane projection
-  xy <- data.frame("x"=temp_dat_spr15$Long,"y"=temp_dat_spr15$Lat)
-  xy.spdf.ll <- SpatialPointsDataFrame(xy, temp_dat_spr15, proj4string = latlong)
-  xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
-  
-  #calculate kde and 95% volume intersection ([,2] is AnimalID; [,20] is MigHR)
-  kud <- kernelUD(xy.spdf.sp[,20], h = "href", same4all=TRUE) #LSCV not alwys converged
-  vol <- kerneloverlaphr(kud, method = "VI", percent = 95, conditional = TRUE)
-  
-  #store results
-  spr15[[i,1]] <- elk
-  spr15[[i,2]] <- vol[2,1]
-}    
-spr15$IndivYr <- paste(spr15$AnimalID, "-15", sep="")
-
-sex <- distinct(dplyr::select(locs, AnimalID, Sex))
-vi <- bind_rows(spr14, spr15) %>%
-  left_join(sex, by = "AnimalID") %>%
-  filter(Sex == "Female")
-
-write.csv(vi, file = "volumeintersection.csv", row.names=F)
-
-
-#############
-#### 50% ####
-
-######################
-#SPRING 2014 MIGRATION
-
-spr14 <- data.frame(matrix(ncol = 2, nrow = numelk.spr14)) #create df wo NAs
-colnames(spr14) <- c("AnimalID", "SprVI")
-
-for(i in 1:numelk.spr14) {
-  elk <- list.spr14[i,]
-  
-  #subset individual and seasonal locations
-  temp_dat_spr14 <- subset(locs, AnimalID == elk) 
-  temp_dat_spr14 <- subset(temp_dat_spr14, MigHR == "Winter 2014" | MigHR == "Summer 2014")
-  
-  #Get xy points, write to dataframe, to spatial data frame, to stateplane projection
-  xy <- data.frame("x"=temp_dat_spr14$Long,"y"=temp_dat_spr14$Lat)
-  xy.spdf.ll <- SpatialPointsDataFrame(xy, temp_dat_spr14, proj4string = latlong)
-  xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
-  
-  #calculate kde and 50% volume intersection ([,2] is AnimalID; [,20] is MigHR)
-  kud <- kernelUD(xy.spdf.sp[,20], h = "href", same4all=TRUE) #LSCV not alwys converged
-  vol <- kerneloverlaphr(kud, method = "VI", percent = 50, conditional = TRUE)
-  
-  #store results
-  spr14[[i,1]] <- elk
-  spr14[[i,2]] <- vol[2,1]
-}    
-spr14$IndivYr <- paste(spr14$AnimalID, "-14", sep="")
-
-######################
-#SPRING 2015 MIGRATION
-
-spr15 <- data.frame(matrix(ncol = 2, nrow = numelk.spr15)) #create df wo NAs
-colnames(spr15) <- c("AnimalID", "SprVI")
-
-for(i in 1:numelk.spr15) {
-  elk <- list.spr15[i,]
-  
-  #subset individual and seasonal locations
-  temp_dat_spr15 <- subset(locs, AnimalID == elk) 
-  temp_dat_spr15 <- subset(temp_dat_spr15, MigHR == "Winter 2015" | MigHR == "Summer 2015")
-  
-  #Get xy points, write points to dataframe, to spatial data frame, to stateplane projection
-  xy <- data.frame("x"=temp_dat_spr15$Long,"y"=temp_dat_spr15$Lat)
-  xy.spdf.ll <- SpatialPointsDataFrame(xy, temp_dat_spr15, proj4string = latlong)
-  xy.spdf.sp <- spTransform(xy.spdf.ll,stateplane)
-  
-  #calculate kde and 50% volume intersection ([,2] is AnimalID; [,20] is MigHR)
-  kud <- kernelUD(xy.spdf.sp[,20], h = "href", same4all=TRUE) #LSCV not alwys converged
-  vol <- kerneloverlaphr(kud, method = "VI", percent = 50, conditional = TRUE)
-  
-  #store results
-  spr15[[i,1]] <- elk
-  spr15[[i,2]] <- vol[2,1]
-}    
-spr15$IndivYr <- paste(spr15$AnimalID, "-15", sep="")
-
-sex <- distinct(dplyr::select(locs, AnimalID, Sex))
-vi50 <- bind_rows(spr14, spr15) %>%
-  left_join(sex, by = "AnimalID") %>%
-  filter(Sex == "Female")
-
-write.csv(vi50, file = "volumeintersection50.csv", row.names=F)
